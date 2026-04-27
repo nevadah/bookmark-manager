@@ -6,6 +6,8 @@ An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Ta
 
 **Beads:** Uses local JSONL-only mode (`no-db: true`). No Dolt remote. `.beads/issues.jsonl` is committed to source control.
 
+**Branch workflow:** All changes must be made on a feature branch. Never commit directly to `main`. Open a GitHub PR (`gh pr create`) to merge. Quality gates (lint, typecheck, build) must pass before opening the PR.
+
 ---
 
 ## Working Style
