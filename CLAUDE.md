@@ -1,12 +1,10 @@
-# [Project Name]
+# Bookmark Manager
 
-<!--
-  Replace this comment with project-specific context:
-  - What this project does
-  - Tech stack and key dependencies
-  - Conventions specific to this codebase
-  - Links to relevant docs, issue tracker, deployment info
--->
+An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI auto-tagging, data stored as a local JSON file. See [bookmark-manager-project-brief.md](bookmark-manager-project-brief.md) for full architecture and scope.
+
+**Stack:** TypeScript, React, Vite, WebExtensions API (MV3), REST AI providers (Anthropic, OpenAI, Azure OpenAI)
+
+**Beads:** Uses local JSONL-only mode (`no-db: true`). No Dolt remote. `.beads/issues.jsonl` is committed to source control.
 
 ---
 
@@ -49,7 +47,6 @@ bd close <id>         # Complete work
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd dolt push
    git push
    git status  # MUST show "up to date with origin"
    ```

@@ -1,3 +1,6 @@
+node_modules/
+dist/
+.claude/settings.local.json
 
 # Beads / Dolt files (added by bd init)
 .dolt/
