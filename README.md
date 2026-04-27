@@ -1,0 +1,109 @@
+# Bookmark Manager
+
+An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Data stored as a local JSON file you control — no accounts, no backend.
+
+## Features
+
+- **Tag-based organization** — tags are properties, not folders; a bookmark can carry multiple tags simultaneously
+- **Hierarchical tags** — use `/` as a separator (`programming/rust/async`); the tree is derived at runtime
+- **AI auto-tagging** — pluggable providers (Anthropic, OpenAI, Azure OpenAI); you supply your own API key
+- **You own your data** — single local JSON file; place it in Dropbox/OneDrive/iCloud for free sync across machines
+- **Cross-browser** — standard WebExtensions API targeting Chromium (Chrome, Edge, Brave, Vivaldi, Opera)
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Language | TypeScript |
+| UI | React 18 |
+| Extension API | WebExtensions API, Manifest V3 |
+| Build | Vite 6 |
+| Data | Local JSON file (File System Access API) |
+| AI | REST calls to provider of choice |
+
+## Development
+
+### Prerequisites
+
+- Node.js 22+
+- npm
+
+### Setup
+
+```bash
+npm install
+```
+
+### Build
+
+```bash
+npm run build        # production build → dist/
+npm run dev          # watch mode
+```
+
+### Quality gates
+
+```bash
+npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
+npm run build        # Vite build
+```
+
+### Load in Chrome
+
+1. Run `npm run build`
+2. Open `chrome://extensions`
+3. Enable **Developer mode** (top-right toggle)
+4. Click **Load unpacked** and select the `dist/` folder
+5. Click the extension icon in the toolbar to open the sidebar
+
+After making changes, run `npm run build` again and click the reload button on the extension card in `chrome://extensions`.
+
+## Project structure
+
+```
+src/
+  background/     service worker (MV3 background context)
+  sidebar/        React app — main extension UI
+  content/        content scripts (page interaction)
+  shared/
+    types/        shared TypeScript types and data model
+    providers/    AI provider abstraction and implementations
+    storage/      file system read/write layer
+public/
+  manifest.json   MV3 extension manifest
+  sidebar/        static HTML shell for the sidebar
+```
+
+## Data model
+
+Bookmarks are stored in a single JSON file:
+
+```json
+{
+  "version": "1.0",
+  "settings": {
+    "aiProvider": "anthropic",
+    "aiApiKey": "sk-ant-...",
+    "dataFilePath": "/Users/name/Dropbox/bookmarks.json"
+  },
+  "bookmarks": [
+    {
+      "id": "uuid-v4",
+      "url": "https://example.com",
+      "title": "Example Site",
+      "description": "",
+      "tags": ["programming/rust", "tools/cli"],
+      "faviconUrl": "https://example.com/favicon.ico",
+      "faviconCache": null,
+      "createdAt": "2026-04-27T12:00:00Z",
+      "aiSuggestedTags": ["programming/rust"],
+      "userModifiedTags": true
+    }
+  ]
+}
+```
+
+## CI
+
+GitHub Actions runs lint → typecheck → build on every push and pull request to `main`.
