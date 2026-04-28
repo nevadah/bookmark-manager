@@ -1,6 +1,6 @@
 # Bookmark Manager
 
-An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Your data stays under your control — no required accounts, no required backend.
+An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Your data stays under your control — works entirely locally with no accounts required, with an optional backend service coming later for sync and team use.
 
 ## Features
 
