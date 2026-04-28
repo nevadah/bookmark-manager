@@ -55,10 +55,17 @@ Returns a one-to-two sentence summary of the page content. Used for the optional
 - Endpoint and deployment name are user-configured (set during setup)
 - Auth: `api-key` header
 
+### OpenRouter
+
+- Same API shape as OpenAI
+- Model: user-configured
+- Auth: `Authorization: Bearer <key>` header
+- Endpoint: `https://openrouter.ai/api/v1/chat/completions`
+
 ## Adding a new provider
 
 1. Create `src/shared/providers/<name>.ts` implementing `AIProvider`.
-2. Add the provider ID to the `AIProviderID` union type in `src/shared/providers/types.ts`.
+2. Add the provider ID to the `AIProviderID` union type in `src/shared/types/index.ts`.
 3. Add a case to the factory function in `src/shared/providers/index.ts` that instantiates the provider from settings.
 4. Add the provider as an option in the settings UI.
 
