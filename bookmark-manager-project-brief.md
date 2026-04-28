@@ -10,9 +10,10 @@ A completely independent bookmark manager that lives in the browser as an extens
 The core differentiators:
 - **Tag-based organization** instead of folders — tags are properties of a bookmark, not locations, so a bookmark can exist under multiple "folders" simultaneously
 - **AI-powered auto-tagging** — when you save a bookmark, AI suggests relevant tags automatically
-- **You own your data** — stored as a local JSON file the user controls, with no required accounts or backend
+- **You own your data** — choose between a local JSON file (portable, cloud-syncable via Dropbox/OneDrive/etc.) or browser storage; no required accounts or backend for MVP
 - **Cross-browser** — built on standard WebExtensions API, targeting Chromium-based browsers (Chrome, Edge, Vivaldi, Brave, Opera) with Firefox compatibility as a secondary goal
-- **Pluggable AI providers** — supports Anthropic, OpenAI, and Azure OpenAI via a simple provider abstraction
+- **Pluggable AI providers** — supports Anthropic, OpenAI, Azure OpenAI, and OpenRouter via a simple provider abstraction
+- **Designed for evolution** — storage abstraction accommodates a future backend service for team/organizational use or SaaS deployment
 
 ---
 
@@ -22,13 +23,20 @@ The core differentiators:
 WebExtensions API, Chromium-first. Uses standard APIs only (no Chrome-specific APIs) to maximize cross-browser compatibility. UI lives in a sidebar panel or dedicated extension page — not a minimal popup — because the feature set requires real UI space.
 
 ### Data Storage
-A single local JSON file as the source of truth. The user specifies the file path during setup. By placing this file in a Dropbox, OneDrive, Google Drive, or iCloud folder, sync across machines "just works" with no backend required.
+A `StorageProvider` interface abstracts the storage backend. Two implementations are supported in MVP:
+
+- **File System** — a single local JSON file the user selects via a file picker. Portable and cloud-syncable by placing it in a Dropbox, OneDrive, Google Drive, or iCloud folder.
+- **Browser storage** — data stored in `chrome.storage.local`. Simpler setup, no file picker required, but limited to ~10MB and tied to the browser profile.
+
+The user chooses their preferred backend during setup. Swapping backends or adding new ones (including a remote API) is a contained change that does not affect application code.
 
 ### AI Integration
 External API calls to the user's chosen AI provider. The user supplies their own API key during setup. Providers are implemented as concrete instances of a common provider interface, making it easy to add new providers later.
 
-### No Backend
-No server, no account creation, no cloud dependency. The extension talks directly to the AI provider API and reads/writes the local JSON file.
+### Backend (MVP: none)
+No server, no account creation, no cloud dependency for MVP. The extension talks directly to the AI provider API and to the user's chosen local storage backend.
+
+A backend service is planned as a post-MVP evolution. The `StorageProvider` abstraction is designed to accommodate a `RemoteStorageProvider` that talks to an API. The backend vision: a self-hostable service usable by individuals, organizations, or as a managed SaaS offering. When a backend is in use, AI calls would be proxied through it (removing the need for users to supply their own API keys), and multi-device sync would be handled natively rather than relying on cloud folder placement.
 
 ---
 
@@ -107,6 +115,7 @@ Define a provider interface early. Each provider is a concrete implementation. S
 - Anthropic (Claude)
 - OpenAI (GPT-4o)
 - Azure OpenAI (same API shape as OpenAI, different endpoint/auth)
+- OpenRouter (same API shape as OpenAI, user-configured model)
 
 **Interface (conceptual):**
 ```typescript
@@ -158,12 +167,12 @@ React is appropriate here (not overkill) because the UI includes a tag tree, boo
 The following constitutes a shippable, useful v1:
 
 - [ ] Extension installs and loads in Chrome/Chromium browsers
-- [ ] Settings screen: choose AI provider, enter API key, set data file path
+- [ ] Settings screen: choose AI provider, enter API key, choose storage backend (file or browser storage)
 - [ ] Save bookmark flow: toolbar button → panel → AI tag suggestions → save
 - [ ] Bookmark list view: flat list with tags displayed
 - [ ] Tag tree view: expandable tree where tags are "folders"
 - [ ] Basic search: filter bookmarks by title, URL, or tag
-- [ ] Data persisted to local JSON file
+- [ ] Data persisted to user's chosen storage backend (file or browser storage)
 
 ---
 
@@ -180,6 +189,7 @@ The following constitutes a shippable, useful v1:
 - Companion desktop app (Electron or Tauri) for richer management UI
 - Keyboard shortcuts
 - Bookmark deduplication
+- **Backend service** — self-hostable API for multi-device sync, team/org use, and optional SaaS deployment; proxies AI calls so users don't need their own API keys; implemented as a `RemoteStorageProvider` behind the existing `StorageProvider` interface
 
 ---
 
@@ -199,11 +209,13 @@ Browser extensions run in a sandboxed environment and do not have arbitrary file
 |---|---|---|
 | Tag storage | Denormalized (strings on bookmark) | Simpler; performance irrelevant at bookmark-manager scale |
 | Tag hierarchy | `/` separator convention | No extra data structure; intuitive; matches conventions in tools like Obsidian |
-| Sync strategy | User places file in cloud-synced folder | No backend to build or maintain; user controls their data |
+| Storage backend | User's choice: file or browser storage | File is portable/syncable; browser storage is simpler — abstraction means neither is locked in |
+| Sync strategy (file backend) | User places file in cloud-synced folder | No backend to build or maintain; user controls their data |
 | Save UX | Dedicated extension button | Avoids cross-browser Ctrl+D interception complexity |
-| AI | External API, user-supplied key | Simple setup; avoids local model complexity |
+| AI | External API, user-supplied key (MVP) | Simple setup; avoids local model complexity; backend will proxy when available |
 | Favicon | `chrome://favicon/` for MVP | Browser cache handles it; no extra network requests |
-| Data file | Single JSON file | Simple; portable; human-readable |
+| Data format | Single JSON file | Simple; portable; human-readable |
+| Storage abstraction | `StorageProvider` interface | Isolates storage concerns; enables future backend without changing app code |
 
 ---
 

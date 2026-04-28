@@ -26,35 +26,47 @@ Communication between contexts uses `chrome.runtime.sendMessage` / `chrome.runti
 ```
 Sidebar  ──sendMessage──▶  Background SW  ──fetch──▶  AI provider API
                                 │
-                         File System Access API
-                                │
-                         bookmarks.json (local file)
+                         StorageProvider
+                        ┌───────┴────────┐
+               File System          chrome.storage.local
+               (local JSON)         (browser storage)
 ```
 
 Content scripts are used only for reading page metadata (title, URL) at save time — they do not participate in storage or AI calls.
 
-## File System Access API
+## Storage abstraction
 
-The extension writes bookmark data to a user-specified local file using the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API). This requires explicit user permission via a file picker.
+All bookmark data access goes through a `StorageProvider` interface defined in `src/shared/storage/types.ts`. The rest of the application depends only on this interface — not on any specific backend.
 
-### Onboarding flow
+```typescript
+interface StorageProvider {
+  readData(): Promise<RootData>;
+  writeData(data: RootData): Promise<void>;
+}
+```
 
+Two implementations ship in MVP. The user chooses during setup; the choice is persisted in `chrome.storage.local`.
+
+### FileSystemStorageProvider
+
+Reads and writes a user-specified local JSON file using the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API).
+
+**Onboarding flow:**
 1. On first run, the sidebar detects no file handle is stored.
 2. User is shown a setup screen prompting them to select or create a file.
 3. `showSaveFilePicker()` opens a native save dialog.
-4. The returned `FileSystemFileHandle` is serialized and stored in `chrome.storage.local` via `IndexedDB` (file handles cannot be stored in `chrome.storage` directly — use a wrapper).
-5. On subsequent runs, the stored handle is retrieved and permission is re-verified with `handle.queryPermission({ mode: 'readwrite' })`. If permission was revoked, the user is prompted again.
-
-### Storage wrapper
-
-File handles must be persisted via IndexedDB (the only storage that accepts non-serializable objects in extensions). The storage layer in `src/shared/storage/` abstracts this:
-
-- `getFileHandle()` — retrieves the stored handle or returns `null`
-- `saveFileHandle(handle)` — persists the handle to IndexedDB
-- `readBookmarks()` — reads and parses the JSON file
-- `writeBookmarks(data)` — serializes and writes the full data file
+4. The returned `FileSystemFileHandle` is persisted to IndexedDB (file handles cannot be stored in `chrome.storage` directly — they are non-serializable objects).
+5. On subsequent runs, the stored handle is retrieved and permission re-verified with `handle.queryPermission({ mode: 'readwrite' })`. If permission was revoked, the user is prompted again.
 
 Writes are full-file overwrites (read → mutate → write). At bookmark-manager scale this is fine; the file will rarely exceed a few hundred KB.
+
+### BrowserStorageProvider
+
+Reads and writes `chrome.storage.local` directly. Simpler setup — no file picker, no IndexedDB handle management. Data is tied to the browser profile and subject to `chrome.storage.local`'s quota (~10MB, sufficient for typical use).
+
+### Future: RemoteStorageProvider
+
+A third implementation is planned post-MVP. It will talk to a backend API, enabling native multi-device sync, team/org use, and SaaS deployment. The `StorageProvider` interface means adding it requires no changes to application code — only a new implementation and a new option in the settings UI.
 
 ## Build output
 
