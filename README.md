@@ -1,13 +1,16 @@
 # Bookmark Manager
 
-An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Data stored as a local JSON file you control — no accounts, no backend.
+An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Your data stays under your control — no required accounts, no required backend.
 
 ## Features
 
 - **Tag-based organization** — tags are properties, not folders; a bookmark can carry multiple tags simultaneously
 - **Hierarchical tags** — use `/` as a separator (`programming/rust/async`); the tree is derived at runtime
-- **AI auto-tagging** — pluggable providers (Anthropic, OpenAI, Azure OpenAI); you supply your own API key
-- **You own your data** — single local JSON file; place it in Dropbox/OneDrive/iCloud for free sync across machines
+- **AI auto-tagging** — pluggable providers (Anthropic, OpenAI, Azure OpenAI, OpenRouter); you supply your own API key
+- **Your data, your choice** — pick your storage backend:
+  - **Local file** — a single JSON file you control; place it in Dropbox/OneDrive/iCloud for free sync across machines
+  - **Browser storage** — stored in your browser profile, no file picker required
+  - **Backend service** *(coming later)* — self-hostable or managed; removes the need for your own AI API key
 - **Cross-browser** — standard WebExtensions API targeting Chromium (Chrome, Edge, Brave, Vivaldi, Opera)
 
 ## Tech stack
@@ -18,7 +21,7 @@ An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Ta
 | UI | React 18 |
 | Extension API | WebExtensions API, Manifest V3 |
 | Build | Vite 6 |
-| Data | Local JSON file (File System Access API) |
+| Data | Local JSON file or browser storage (pluggable `StorageProvider`) |
 | AI | REST calls to provider of choice |
 
 ## Development
@@ -69,7 +72,7 @@ src/
   shared/
     types/        shared TypeScript types and data model
     providers/    AI provider abstraction and implementations
-    storage/      file system read/write layer
+    storage/      StorageProvider abstraction and implementations
 public/
   manifest.json   MV3 extension manifest
   sidebar/        static HTML shell for the sidebar
@@ -77,15 +80,14 @@ public/
 
 ## Data model
 
-Bookmarks are stored in a single JSON file:
+Bookmark data is stored as JSON (structure is the same regardless of storage backend):
 
 ```json
 {
   "version": "1.0",
   "settings": {
     "aiProvider": "anthropic",
-    "aiApiKey": "sk-ant-...",
-    "dataFilePath": "/Users/name/Dropbox/bookmarks.json"
+    "aiApiKey": "sk-ant-..."
   },
   "bookmarks": [
     {
