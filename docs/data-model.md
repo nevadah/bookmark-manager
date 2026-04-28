@@ -26,7 +26,7 @@ The entire data store is a single JSON file the user controls.
 
 | Field | Type | Notes |
 |---|---|---|
-| `aiProvider` | `"anthropic" \| "openai" \| "azure-openai"` | Selected AI provider |
+| `aiProvider` | `"anthropic" \| "openai" \| "azure-openai" \| "openrouter"` | Selected AI provider |
 | `aiApiKey` | string | User's API key for the selected provider. Stored locally only — never transmitted except to the chosen provider |
 | `dataFilePath` | string | Display-only. The actual file handle is stored separately in IndexedDB. This field is for the user's reference |
 
