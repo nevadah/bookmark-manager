@@ -10,7 +10,7 @@ The entire data store is a single JSON file the user controls.
   "settings": {
     "aiProvider": "anthropic",
     "aiApiKey": "sk-ant-...",
-    "dataFilePath": "/Users/name/Dropbox/bookmarks.json"
+    "storageBackend": "file"
   },
   "bookmarks": []
 }
@@ -28,7 +28,7 @@ The entire data store is a single JSON file the user controls.
 |---|---|---|
 | `aiProvider` | `"anthropic" \| "openai" \| "azure-openai" \| "openrouter"` | Selected AI provider |
 | `aiApiKey` | string | User's API key for the selected provider. Stored locally only — never transmitted except to the chosen provider |
-| `dataFilePath` | string | Display-only. The actual file handle is stored separately in IndexedDB. This field is for the user's reference |
+| `storageBackend` | `"file" \| "browser" ` | Which storage backend to use |
 
 ## Bookmark object
 
