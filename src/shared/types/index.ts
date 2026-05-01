@@ -1,10 +1,12 @@
 export type AIProviderID = 'anthropic' | 'openai' | 'azure-openai' | 'openrouter';
+export type StorageBackend = 'file' | 'browser';
+
 export type RootDataVersion = '1.0';
 
 export interface Settings {
     aiProvider: AIProviderID;
     aiApiKey: string;
-    dataFilePath: string;
+    storageBackend: StorageBackend;
 }
 
 export interface Bookmark {
