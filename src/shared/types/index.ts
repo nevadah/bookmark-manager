@@ -7,6 +7,9 @@ export interface Settings {
     aiProvider: AIProviderID;
     aiApiKey: string;
     storageBackend: StorageBackend;
+    azureEndpoint?: string;
+    azureDeployment?: string;
+    openRouterModel?: string;
 }
 
 export interface Bookmark {
