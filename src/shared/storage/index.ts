@@ -1,12 +1,14 @@
 import { StorageProvider } from "./types";
 import { Settings } from "../types";
+import { FileSystemStorageProvider } from "./file-system";
+import { BrowserStorageProvider } from "./browser";
 
 export function createStorageProvider(settings: Settings): StorageProvider {
     switch (settings.storageBackend) {
         case 'file':
-            throw new Error(`File storage backend is not implemented yet.`);
+            return new FileSystemStorageProvider();
         case 'browser':
-            throw new Error(`Browser storage backend is not implemented yet.`);
+            return new BrowserStorageProvider();
         default: {
             const _exhaustive: never = settings.storageBackend;
             throw new Error(`Unknown storage backend: ${String(_exhaustive)}`);
