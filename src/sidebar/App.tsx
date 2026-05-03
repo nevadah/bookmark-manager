@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SettingsView } from "./SettingsView";
 
 type View = 'bookmarks' | 'tags' | 'search' | 'settings';
 
@@ -17,7 +18,7 @@ export function App() {
                 {view === 'bookmarks' && <BookmarksView />}
                 {view === 'tags' && <TagsView />}
                 {view === 'search' && <SearchView />}
-                {view === 'settings' && <SettingsView />}
+                {view === 'settings' && <SettingsView onSave={() => {}} />}
             </main>
         </div>
     );
@@ -33,8 +34,4 @@ function TagsView() {
 
 function SearchView() {
     return <div>Search</div>;
-}
-
-function SettingsView() {
-    return <div>Settings</div>;
 }
