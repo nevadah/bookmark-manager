@@ -2,6 +2,14 @@
 
 An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Your data stays under your control — works entirely locally with no accounts required, with an optional backend service coming later for sync and team use.
 
+## Purpose
+
+The purpose and goals of this project are:
+- To practice coding with TypeScript and React and, as a secondary goal, to learn browser extension development.
+- To use AI differently than other projects I've done. Claude guides the process and suggests tasks, I write the code, and Claude reviews my work.
+
+This is a learning project. It is not initially intended as something that will be put into production but it's possible it will get to that point.
+
 ## Features
 
 - **Tag-based organization** — tags are properties, not folders; a bookmark can carry multiple tags simultaneously
@@ -47,6 +55,11 @@ npm run dev          # watch mode
 ### Quality gates
 
 ```bash
+npm run check
+```
+
+This wraps the following commands:
+```bash
 npm run lint         # ESLint
 npm run typecheck    # tsc --noEmit
 npm run build        # Vite build
@@ -87,7 +100,8 @@ Bookmark data is stored as JSON (structure is the same regardless of storage bac
   "version": "1.0",
   "settings": {
     "aiProvider": "anthropic",
-    "aiApiKey": "sk-ant-..."
+    "aiApiKey": "sk-ant-...",
+    "storageBackend": "file"
   },
   "bookmarks": [
     {
@@ -105,6 +119,8 @@ Bookmark data is stored as JSON (structure is the same regardless of storage bac
   ]
 }
 ```
+
+Azure OpenAI additionally requires `azureEndpoint` and `azureDeployment` in settings. OpenRouter additionally requires `openRouterModel`.
 
 ## CI
 
