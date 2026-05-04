@@ -5,6 +5,7 @@ import { createStorageProvider } from "../shared/storage";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
 import { SearchView } from "./SearchView";
+import { TagsView } from "./TagsView";
 
 type View = 'bookmarks' | 'tags' | 'search' | 'settings';
 
@@ -74,15 +75,10 @@ export function App() {
             </nav>
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} />}
-                {view === 'tags' && <TagsView />}
+                {view === 'tags' && <TagsView bookmarks={rootData.bookmarks} />}
                 {view === 'search' && <SearchView bookmarks={rootData.bookmarks} onUpdate={handleUpdateBookmark} />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}
             </main>
         </div>
     );
 }
-
-function TagsView() {
-    return <div>Tags</div>;
-}
-
