@@ -44,6 +44,17 @@ export function App() {
       }
     }
 
+    async function handleUpdateBookmark(updated: Bookmark) {
+      const bookmarks = rootData!.bookmarks.map((b) => b.id === updated.id ? updated : b);
+      const updatedData = { ...rootData!, bookmarks };
+      try {
+        await createStorageProvider(rootData!.settings).writeData(updatedData);
+        setRootData(updatedData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update bookmark');
+      }
+    }
+
     if (error) {
       return <div>Error: {error}</div>;
     }
@@ -61,7 +72,7 @@ export function App() {
                 <button onClick={() => setView('settings')}>Settings</button>
             </nav>
             <main>
-                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} />}
+                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} />}
                 {view === 'tags' && <TagsView />}
                 {view === 'search' && <SearchView />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}
