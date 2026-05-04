@@ -1,5 +1,6 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { Settings, AIProviderID, StorageBackend } from '../shared/types';
+import { saveFileHandle, getFileHandle } from "../shared/storage/file-handle-store";
 
 interface SettingsViewProps {
     settings: Settings;
@@ -13,6 +14,7 @@ export function SettingsView({ settings, onSave }: SettingsViewProps) {
     const [azureEndpoint, setAzureEndpoint] = useState(settings.azureEndpoint ?? '');
     const [azureDeployment, setAzureDeployment] = useState(settings.azureDeployment ?? '');
     const [openRouterModel, setOpenRouterModel] = useState(settings.openRouterModel ?? '');
+    const [fileHandleName, setFileHandleName] = useState<string | null>(null);
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -30,6 +32,29 @@ export function SettingsView({ settings, onSave }: SettingsViewProps) {
         }
         onSave(newSettings);
     }
+
+    async function handleSelectFile() {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: 'bookmarks.json',
+                types: [{ description: 'JSON Files', accept: {'application/json': ['.json']} }]
+            });
+            await saveFileHandle(handle);
+            setFileHandleName(handle.name);
+        } catch {
+            // user cancelled - do nothing
+        }
+    }
+
+    useEffect(() => {
+        if (settings.storageBackend === 'file') {
+            getFileHandle().then((handle) => {
+                if (handle) {
+                    setFileHandleName(handle.name);
+                }
+            });
+        }
+    }, [settings.storageBackend]);
 
     return (
         <form onSubmit={handleSubmit}>
@@ -83,7 +108,13 @@ export function SettingsView({ settings, onSave }: SettingsViewProps) {
                     </select>
                 </label>
             </div>
-            <button type="submit">Save Settings</button>
+            {storageBackend === 'file' && (
+                <div>
+                    <button type="button" onClick={handleSelectFile}>Select File...</button>
+                    {fileHandleName && <span>Selected File: {fileHandleName}</span>}
+                </div>
+            )}
+            <button type="submit" disabled={storageBackend === 'file' && !fileHandleName}>Save Settings</button>
         </form>
     );
 }
