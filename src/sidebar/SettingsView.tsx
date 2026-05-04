@@ -2,32 +2,33 @@ import { useState, FormEvent } from "react";
 import { Settings, AIProviderID, StorageBackend } from '../shared/types';
 
 interface SettingsViewProps {
+    settings: Settings;
     onSave: (settings: Settings) => void;
 }
 
-export function SettingsView({ onSave }: SettingsViewProps) {
-    const [aiProvider, setAIProvider] = useState<AIProviderID>('anthropic');
-    const [aiApiKey, setAIApiKey] = useState('');
-    const [storageBackend, setStorageBackend] = useState<StorageBackend>('browser');
-    const [azureEndpoint, setAzureEndpoint] = useState('');
-    const [azureDeployment, setAzureDeployment] = useState('');
-    const [openRouterModel, setOpenRouterModel] = useState('');
+export function SettingsView({ settings, onSave }: SettingsViewProps) {
+    const [aiProvider, setAIProvider] = useState<AIProviderID>(settings.aiProvider);
+    const [aiApiKey, setAIApiKey] = useState(settings.aiApiKey);
+    const [storageBackend, setStorageBackend] = useState<StorageBackend>(settings.storageBackend);
+    const [azureEndpoint, setAzureEndpoint] = useState(settings.azureEndpoint ?? '');
+    const [azureDeployment, setAzureDeployment] = useState(settings.azureDeployment ?? '');
+    const [openRouterModel, setOpenRouterModel] = useState(settings.openRouterModel ?? '');
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         // build Settings object and call onSave
-        const settings: Settings = {
+        const newSettings: Settings = {
             aiProvider,
             aiApiKey,
             storageBackend
         };
         if (aiProvider === 'azure-openai') {
-            settings.azureEndpoint = azureEndpoint;
-            settings.azureDeployment = azureDeployment;
+            newSettings.azureEndpoint = azureEndpoint;
+            newSettings.azureDeployment = azureDeployment;
         } else if (aiProvider === 'openrouter') {
-            settings.openRouterModel = openRouterModel;
+            newSettings.openRouterModel = openRouterModel;
         }
-        onSave(settings);
+        onSave(newSettings);
     }
 
     return (
