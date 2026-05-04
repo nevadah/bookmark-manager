@@ -49,7 +49,10 @@ function TagTreeNode({ node }: { node: TagNode }) {
 
     return (
         <li>
-            <span onClick={() => hasChildren && setExpanded(!expanded)}>
+            <span
+                style={{cursor: hasChildren ? 'pointer' : 'default'}}
+                onClick={() => hasChildren && setExpanded(!expanded)}
+            >
                 {hasChildren ? (expanded ? '▼' : '▶') : '•'} {node.name}
                 {node.count > 0 && <span> ({node.count})</span>}
             </span>
