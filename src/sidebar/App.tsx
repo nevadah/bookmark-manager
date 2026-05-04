@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { RootData, Settings } from '../shared/types';
+import { RootData, Settings, Bookmark } from '../shared/types';
 import { BrowserStorageProvider } from "../shared/storage/browser";
 import { createStorageProvider } from "../shared/storage";
 import { SettingsView } from "./SettingsView";
+import { BookmarksView } from "./BookmarksView";
 
 type View = 'bookmarks' | 'tags' | 'search' | 'settings';
 
@@ -30,6 +31,19 @@ export function App() {
       }
     }
 
+    async function handleAddBookmark(bookmark: Bookmark) {
+      const updated: RootData = {
+        ...rootData!,
+        bookmarks: [...rootData!.bookmarks, bookmark]
+      };
+      try {
+        await createStorageProvider(rootData!.settings).writeData(updated);
+        setRootData(updated);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to save bookmark');
+      }
+    }
+
     if (error) {
       return <div>Error: {error}</div>;
     }
@@ -47,17 +61,13 @@ export function App() {
                 <button onClick={() => setView('settings')}>Settings</button>
             </nav>
             <main>
-                {view === 'bookmarks' && <BookmarksView />}
+                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} />}
                 {view === 'tags' && <TagsView />}
                 {view === 'search' && <SearchView />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}
             </main>
         </div>
     );
-}
-
-function BookmarksView() {
-    return <div>Bookmarks</div>;
 }
 
 function TagsView() {
