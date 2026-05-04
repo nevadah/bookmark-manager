@@ -1,10 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { RootData, Settings } from '../shared/types';
+import { BrowserStorageProvider } from "../shared/storage/browser";
+import { createStorageProvider } from "../shared/storage";
 import { SettingsView } from "./SettingsView";
 
 type View = 'bookmarks' | 'tags' | 'search' | 'settings';
 
+const bootstrapProvider = new BrowserStorageProvider();
+
 export function App() {
     const [view, setView] = useState<View>('bookmarks');
+    const [rootData, setRootData] = useState<RootData | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+      bootstrapProvider.readData().then(setRootData).catch((err) => {
+        setError('Failed to load data: ' + err.message);
+      });
+    }, []);
+
+    async function handleSaveSettings(settings: Settings) {
+      const base = rootData ?? { version: '1.0' as const, settings, bookmarks: []};
+      const updated: RootData = { ...base, settings };
+      try {
+        await createStorageProvider(settings).writeData(updated);
+        setRootData(updated);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to save settings');
+      }
+    }
+
+    if (error) {
+      return <div>Error: {error}</div>;
+    }
+
+    if (!rootData) {
+      return <div>Loading...</div>;
+    }
 
     return (
         <div>
@@ -18,7 +50,7 @@ export function App() {
                 {view === 'bookmarks' && <BookmarksView />}
                 {view === 'tags' && <TagsView />}
                 {view === 'search' && <SearchView />}
-                {view === 'settings' && <SettingsView onSave={() => {}} />}
+                {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}
             </main>
         </div>
     );
