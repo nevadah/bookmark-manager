@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { RootData, Settings, Bookmark } from '../shared/types';
 import { BrowserStorageProvider } from "../shared/storage/browser";
 import { createStorageProvider } from "../shared/storage";
+import { createProvider } from "../shared/providers";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
 import { SearchView } from "./SearchView";
@@ -43,6 +44,29 @@ export function App() {
             setRootData(updated);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save bookmark');
+        }
+
+        // AI tagging in the background. Don't await, don't block
+        if (rootData!.settings.aiApiKey) {
+            try {
+                const provider = createProvider(rootData!.settings);
+                const suggestedTags = await provider.suggestTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
+                if (suggestedTags.length > 0) {
+                    const withTags: Bookmark = {
+                        ...bookmark,
+                        aiSuggestedTags: suggestedTags,
+                        tags: bookmark.userModifiedTags ? bookmark.tags : suggestedTags
+                    };
+                    const withAiTags: RootData = {
+                        ...updated,
+                        bookmarks: updated.bookmarks.map((b) => b.id === withTags.id ? withTags : b)
+                    };
+                    await createStorageProvider(updated.settings).writeData(withAiTags);
+                    setRootData(withAiTags);
+                }
+            } catch {
+                // Silently fail on AI errors. Bookmark is already saved, just without AI tags
+            }
         }
     }
 
