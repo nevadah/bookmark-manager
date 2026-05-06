@@ -233,3 +233,10 @@ button.edit {
 button.edit:hover {
     color: #1a56db;
 }
+
+.empty-state {
+    color: #888;
+    font-size: 13px;
+    margin-top: 16px;
+    text-align: center;
+}
