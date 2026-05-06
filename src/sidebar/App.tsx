@@ -103,10 +103,10 @@ export function App() {
     return (
         <div>
             <nav>
-                <button onClick={() => setView('bookmarks')}>Bookmarks</button>
-                <button onClick={() => setView('tags')}>Tags</button>
-                <button onClick={() => setView('search')}>Search</button>
-                <button onClick={() => setView('settings')}>Settings</button>
+                <button className={view === 'bookmarks' ? 'active' : ''} onClick={() => setView('bookmarks')}>Bookmarks</button>
+                <button className={view === 'tags' ? 'active' : ''} onClick={() => setView('tags')}>Tags</button>
+                <button className={view === 'search' ? 'active' : ''} onClick={() => setView('search')}>Search</button>
+                <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>Settings</button>
             </nav>
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} />}

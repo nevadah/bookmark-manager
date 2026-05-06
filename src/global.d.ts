@@ -9,3 +9,5 @@ interface SaveFilePickerOptions {
 interface Window {
     showSaveFilePicker(options?: SaveFilePickerOptions): Promise<FileSystemFileHandle>;
 }
+
+declare module "*.css";
