@@ -6,9 +6,9 @@ import { createProvider } from "../shared/providers";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
 import { SearchView } from "./SearchView";
-import { TagsView } from "./TagsView";
+import { EditPanel } from "./EditPanel";
 
-type View = 'bookmarks' | 'tags' | 'search' | 'settings';
+type View = 'bookmarks' | 'search' | 'settings';
 
 const bootstrapProvider = new BrowserStorageProvider();
 
@@ -16,6 +16,7 @@ export function App() {
     const [view, setView] = useState<View>('bookmarks');
     const [rootData, setRootData] = useState<RootData | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
 
     useEffect(() => {
         bootstrapProvider.readData().then(setRootData).catch((err) => {
@@ -104,16 +105,24 @@ export function App() {
         <div>
             <nav>
                 <button className={view === 'bookmarks' ? 'active' : ''} onClick={() => setView('bookmarks')}>Bookmarks</button>
-                <button className={view === 'tags' ? 'active' : ''} onClick={() => setView('tags')}>Tags</button>
                 <button className={view === 'search' ? 'active' : ''} onClick={() => setView('search')}>Search</button>
                 <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>Settings</button>
             </nav>
             <main>
-                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} />}
-                {view === 'tags' && <TagsView bookmarks={rootData.bookmarks} />}
+                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
                 {view === 'search' && <SearchView bookmarks={rootData.bookmarks} onUpdate={handleUpdateBookmark} />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}
             </main>
+            {editingBookmark && (
+                <EditPanel
+                    bookmark={editingBookmark}
+                    onUpdate={(updated) => {
+                        handleUpdateBookmark(updated);
+                        setEditingBookmark(updated);
+                    }}
+                    onClose={() => setEditingBookmark(null)}
+                />
+            )}
         </div>
     );
 }
