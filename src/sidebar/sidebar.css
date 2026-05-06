@@ -44,11 +44,6 @@ ul {
     margin: 8px 0 0;
 }
 
-li {
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
 a {
     color: #1a56db;
     text-decoration: none;
@@ -138,23 +133,6 @@ nav button.active {
     min-width: 80px;
 }
 
-.bookmark-item {
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.bookmark-header {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-}
-
-.bookmark-header a {
-    flex: 1;
-    min-width: 0;
-}
-
 button.delete {
     background: none;
     border: none;
@@ -167,3 +145,91 @@ button.delete:hover {
     color: #c0392b;
 }
 
+.tag-tree {
+    margin-top: 8px;
+}
+
+.tree-node {
+    list-style: none;
+}
+
+.tree-label {
+    display: block;
+    padding: 4px 0;
+    cursor: pointer;
+    font-weight: 500;
+    color: #333;
+    user-select: none;
+}
+
+.tree-label:hover {
+    color: #1a56db;
+}
+
+.tree-node > ul {
+    padding-left: 16px;
+    border-left: 1px solid #e0e0e0;
+    margin-left: 6px;
+}
+
+.bookmark-leaf {
+    padding: 4px 0;
+    border-bottom: none;
+}
+
+.bookmark-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bookmark-header a {
+    flex: 1;
+    min-width: 0;
+}
+
+.edit-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 2px solid #1a56db;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.edit-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    font-weight: 500;
+    background: #f0f4ff;
+}
+
+.edit-panel-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.edit-panel-body label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 12px;
+    color: #555;
+}
+
+button.edit {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 15px;
+    padding: 0 4px;
+}
+
+button.edit:hover {
+    color: #1a56db;
+}
