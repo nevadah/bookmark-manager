@@ -110,7 +110,7 @@ export function App() {
             </nav>
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
-                {view === 'search' && <SearchView bookmarks={rootData.bookmarks} onUpdate={handleUpdateBookmark} />}
+                {view === 'search' && <SearchView bookmarks={rootData.bookmarks} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}
             </main>
             {editingBookmark && (
