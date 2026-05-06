@@ -64,6 +64,15 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: 
         });
     }
 
+    if (bookmarks.length === 0) {
+        return (
+            <div>
+                <button onClick={handleSaveCurrentPage}>Save Current Page</button>
+                <p className="empty-state">No bookmarks yet. Save a page to get started.</p>
+            </div>
+        );
+    }
+
     return (
         <div>
             <button onClick={handleSaveCurrentPage}>Save Current Page</button>
