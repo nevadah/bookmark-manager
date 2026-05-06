@@ -1,0 +1,169 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    width: 100%;
+}
+
+nav {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 8px 8px 0;
+    gap: 4px;
+}
+
+nav button {
+    flex: 1;
+    padding: 6px 4px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+    color: #555;
+}
+
+nav button:hover {
+    color: #1a1a1a;
+}
+
+main {
+    padding: 12px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+}
+
+li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+a {
+    color: #1a56db;
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="search"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #1a56db;
+}
+
+button {
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 1px solid #d0d0d0;
+    background: #f5f5f5;
+}
+
+button:hover {
+    background: #e8e8e8;
+}
+
+nav button.active {
+    color: #1a56db;
+    border-bottom: 2px solid #1a56db;
+}
+
+/* Tag chips */
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    align-items: center;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #e8f0fe;
+    color: #1a56db;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+.tag button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #1a56db;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.tag button:hover {
+    color: #c0392b;
+}
+
+.tags input {
+    width: auto;
+    flex: 1;
+    min-width: 80px;
+}
+
+.bookmark-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.bookmark-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.bookmark-header a {
+    flex: 1;
+    min-width: 0;
+}
+
+button.delete {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 16px;
+    padding: 0 4px;
+}
+
+button.delete:hover {
+    color: #c0392b;
+}
+

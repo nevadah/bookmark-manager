@@ -56,14 +56,16 @@ function BookmarkItem({ bookmark, onUpdate, onDelete }: { bookmark: Bookmark; on
     }
 
     return (
-        <li>
-            <a href={bookmark.url} target="_blank" rel="noopener noreferrer">{bookmark.title}</a>
-            <button type="button" onClick={() => onDelete(bookmark.id)}>Delete</button>
-            <div>
+        <li className="bookmark-item">
+            <div className="bookmark-header">
+                <a href={bookmark.url} target="_blank" rel="noopener noreferrer">{bookmark.title}</a>
+                <button type="button" className="delete" onClick={() => onDelete(bookmark.id)}>✕</button>
+            </div>
+            <div className="tags">
                 {bookmark.tags.map((tag) => (
-                    <span key={tag}>
+                    <span key={tag} className="tag">
                         {tag}
-                        <button type="button" onClick={() => handleRemoveTag(tag)}>×</button>
+                        <button type="button" onClick={() => handleRemoveTag(tag)}>✕</button>
                     </span>
                 ))}
                 <input
