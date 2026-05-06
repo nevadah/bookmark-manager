@@ -81,6 +81,17 @@ export function App() {
         }
     }
 
+    async function handleDeleteBookmark(id: string) {
+        const bookmarks = rootData!.bookmarks.filter((b) => b.id !== id);
+        const updatedData = { ...rootData!, bookmarks };
+        try {
+            await createStorageProvider(rootData!.settings).writeData(updatedData);
+            setRootData(updatedData);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to delete bookmark');
+        }
+    }
+
     if (error) {
         return <div>Error: {error}</div>;
     }
@@ -98,7 +109,7 @@ export function App() {
                 <button onClick={() => setView('settings')}>Settings</button>
             </nav>
             <main>
-                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} />}
+                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} />}
                 {view === 'tags' && <TagsView bookmarks={rootData.bookmarks} />}
                 {view === 'search' && <SearchView bookmarks={rootData.bookmarks} onUpdate={handleUpdateBookmark} />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}

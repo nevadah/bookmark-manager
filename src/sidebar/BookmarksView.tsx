@@ -5,9 +5,10 @@ interface BookmarksViewProps {
     bookmarks: Bookmark[];
     onAdd: (bookmark: Bookmark) => void;
     onUpdate: (bookmark: Bookmark) => void;
+    onDelete: (id: string) => void;
 }
 
-export function BookmarksView({ bookmarks, onAdd, onUpdate }: BookmarksViewProps) {
+export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete }: BookmarksViewProps) {
     async function handleSaveCurrentPage() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.url) return;
@@ -31,14 +32,14 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate }: BookmarksViewProps
             <button onClick={handleSaveCurrentPage}>Save Current Page</button>
             <ul>
                 {bookmarks.map((bookmark) => (
-                    <BookmarkItem key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} />
+                        <BookmarkItem key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} />
                 ))}
             </ul>
         </div>
     );
 }
 
-function BookmarkItem({ bookmark, onUpdate }: { bookmark: Bookmark; onUpdate: (bookmark: Bookmark) => void }) {
+function BookmarkItem({ bookmark, onUpdate, onDelete }: { bookmark: Bookmark; onUpdate: (bookmark: Bookmark) => void; onDelete: (id: string) => void }) {
     const [tagInput, setTagInput] = useState('');
 
     function handleTagKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -57,6 +58,7 @@ function BookmarkItem({ bookmark, onUpdate }: { bookmark: Bookmark; onUpdate: (b
     return (
         <li>
             <a href={bookmark.url} target="_blank" rel="noopener noreferrer">{bookmark.title}</a>
+            <button type="button" onClick={() => onDelete(bookmark.id)}>Delete</button>
             <div>
                 {bookmark.tags.map((tag) => (
                     <span key={tag}>
