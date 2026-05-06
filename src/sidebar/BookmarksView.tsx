@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bookmark } from "../shared/types";
+import { BookmarkLeaf } from "./BookmarkLeaf";
 
 interface TagNode {
     name: string;
@@ -118,34 +119,6 @@ function TagTreeNode({ node, onUpdate, onDelete, onEdit }: {
                         <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} />
                     ))}
                 </ul>
-            )}
-        </li>
-    );
-}
-
-function BookmarkLeaf({ bookmark, onUpdate: _onUpdate, onDelete, onEdit }: {
-    bookmark: Bookmark;
-    onUpdate: (bookmark: Bookmark) => void;
-    onDelete: (id: string) => void;
-    onEdit: (bookmark: Bookmark) => void;
-}) {
-    return (
-        <li className="bookmark-leaf">
-            <div className="bookmark-header">
-                <a href={bookmark.url} target="_blank" rel="noopener noreferrer">{bookmark.title}</a>
-                <button type="button" className="delete" onClick={() => onDelete(bookmark.id)}>✕</button>
-                <button type="button" className="edit" onClick={() => onEdit(bookmark)}>
-                    ✎
-                </button>
-            </div>
-            {bookmark.tags.length > 0 && (
-                <div className="tags">
-                    {bookmark.tags.map((tag) => (
-                        <span key={tag} className="tag">
-                            {tag}
-                        </span>
-                    ))}
-                </div>
             )}
         </li>
     );
