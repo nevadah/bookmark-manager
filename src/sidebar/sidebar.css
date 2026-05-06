@@ -1,3 +1,43 @@
+:root {
+    --bg: #fff;
+    --text: #1a1a1a;
+    --text-muted: #555;
+    --text-subtle: #888;
+    --accent: #1a56db;
+    --border: #e0e0e0;
+    --border-input: #d0d0d0;
+    --btn-bg: #f5f5f5;
+    --btn-hover: #e8e8e8;
+    --tag-bg: #e8f0fe;
+    --tag-text: #1a56db;
+    --danger: #c0392b;
+    --icon-muted: #aaa;
+    --tree-label: #333;
+    --panel-header-bg: #f0f4ff;
+    --panel-label: #555;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #1e1e1e;
+        --text: #e8e8e8;
+        --text-muted: #aaa;
+        --text-subtle: #666;
+        --accent: #5b8dee;
+        --border: #3a3a3a;
+        --border-input: #444;
+        --btn-bg: #2a2a2a;
+        --btn-hover: #383838;
+        --tag-bg: #1e3a6e;
+        --tag-text: #5b8dee;
+        --danger: #e74c3c;
+        --icon-muted: #666;
+        --tree-label: #ccc;
+        --panel-header-bg: #1a2a4a;
+        --panel-label: #aaa;
+    }
+}
+
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -7,14 +47,14 @@
 body {
     font-family: system-ui, sans-serif;
     font-size: 14px;
-    color: #1a1a1a;
-    background: #fff;
+    color: var(--text);
+    background: var(--bg);
     width: 100%;
 }
 
 nav {
     display: flex;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border);
     padding: 8px 8px 0;
     gap: 4px;
 }
@@ -27,11 +67,16 @@ nav button {
     cursor: pointer;
     border-bottom: 2px solid transparent;
     font-size: 13px;
-    color: #555;
+    color: var(--text-muted);
 }
 
 nav button:hover {
-    color: #1a1a1a;
+    color: var(--text);
+}
+
+nav button.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
 }
 
 main {
@@ -45,7 +90,7 @@ ul {
 }
 
 a {
-    color: #1a56db;
+    color: var(--accent);
     text-decoration: none;
     font-weight: 500;
     display: block;
@@ -63,14 +108,16 @@ input[type="password"],
 input[type="search"] {
     width: 100%;
     padding: 6px 8px;
-    border: 1px solid #d0d0d0;
+    border: 1px solid var(--border-input);
     border-radius: 4px;
     font-size: 13px;
     outline: none;
+    background: var(--bg);
+    color: var(--text);
 }
 
 input:focus {
-    border-color: #1a56db;
+    border-color: var(--accent);
 }
 
 button {
@@ -78,17 +125,13 @@ button {
     border-radius: 4px;
     font-size: 13px;
     padding: 5px 10px;
-    border: 1px solid #d0d0d0;
-    background: #f5f5f5;
+    border: 1px solid var(--border-input);
+    background: var(--btn-bg);
+    color: var(--text);
 }
 
 button:hover {
-    background: #e8e8e8;
-}
-
-nav button.active {
-    color: #1a56db;
-    border-bottom: 2px solid #1a56db;
+    background: var(--btn-hover);
 }
 
 /* Tag chips */
@@ -104,8 +147,8 @@ nav button.active {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    background: #e8f0fe;
-    color: #1a56db;
+    background: var(--tag-bg);
+    color: var(--tag-text);
     border-radius: 12px;
     padding: 2px 8px;
     font-size: 12px;
@@ -115,7 +158,7 @@ nav button.active {
     background: none;
     border: none;
     padding: 0;
-    color: #1a56db;
+    color: var(--tag-text);
     font-size: 14px;
     line-height: 1;
     cursor: pointer;
@@ -124,7 +167,7 @@ nav button.active {
 }
 
 .tag button:hover {
-    color: #c0392b;
+    color: var(--danger);
 }
 
 .tags input {
@@ -136,13 +179,25 @@ nav button.active {
 button.delete {
     background: none;
     border: none;
-    color: #aaa;
+    color: var(--icon-muted);
     font-size: 16px;
     padding: 0 4px;
 }
 
 button.delete:hover {
-    color: #c0392b;
+    color: var(--danger);
+}
+
+button.edit {
+    background: none;
+    border: none;
+    color: var(--icon-muted);
+    font-size: 15px;
+    padding: 0 4px;
+}
+
+button.edit:hover {
+    color: var(--accent);
 }
 
 .tag-tree {
@@ -158,17 +213,17 @@ button.delete:hover {
     padding: 4px 0;
     cursor: pointer;
     font-weight: 500;
-    color: #333;
+    color: var(--tree-label);
     user-select: none;
 }
 
 .tree-label:hover {
-    color: #1a56db;
+    color: var(--accent);
 }
 
 .tree-node > ul {
     padding-left: 16px;
-    border-left: 1px solid #e0e0e0;
+    border-left: 1px solid var(--border);
     margin-left: 6px;
 }
 
@@ -193,8 +248,8 @@ button.delete:hover {
     bottom: 0;
     left: 0;
     right: 0;
-    background: #fff;
-    border-top: 2px solid #1a56db;
+    background: var(--bg);
+    border-top: 2px solid var(--accent);
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -204,7 +259,8 @@ button.delete:hover {
     justify-content: space-between;
     padding: 8px 12px;
     font-weight: 500;
-    background: #f0f4ff;
+    background: var(--panel-header-bg);
+    color: var(--text);
 }
 
 .edit-panel-body {
@@ -219,23 +275,11 @@ button.delete:hover {
     flex-direction: column;
     gap: 3px;
     font-size: 12px;
-    color: #555;
-}
-
-button.edit {
-    background: none;
-    border: none;
-    color: #aaa;
-    font-size: 15px;
-    padding: 0 4px;
-}
-
-button.edit:hover {
-    color: #1a56db;
+    color: var(--panel-label);
 }
 
 .empty-state {
-    color: #888;
+    color: var(--text-subtle);
     font-size: 13px;
     margin-top: 16px;
     text-align: center;
