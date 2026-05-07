@@ -11,9 +11,23 @@ export function BookmarkLeaf({ bookmark, onUpdate: _onUpdate, onDelete, onEdit }
     return (
         <li className="bookmark-leaf">
             <div className="bookmark-header">
-                <a href={bookmark.url} target="_blank" rel="noopener noreferrer">{bookmark.title}</a>
-                <button type="button" className="delete" onClick={() => onDelete(bookmark.id)}>✕</button>
-                <button type="button" className="edit" onClick={() => onEdit(bookmark)}>✎</button>
+                {bookmark.faviconUrl && (
+                    <img
+                        src={bookmark.faviconUrl}
+                        className="favicon"
+                        alt=""
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                )}
+                <a href={bookmark.url} target="_blank" rel="noopener noreferrer">
+                    {bookmark.title}
+                </a>
+                <button type="button" className="delete" onClick={() => onDelete(bookmark.id)}>
+                    ✕
+                </button>
+                <button type="button" className="edit" onClick={() => onEdit(bookmark)}>
+                    ✎
+                </button>
             </div>
             {bookmark.tags.length > 0 && (
                 <div className="tags">
