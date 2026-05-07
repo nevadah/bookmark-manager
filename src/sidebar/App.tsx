@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { RootData, Settings, Bookmark } from '../shared/types';
 import { BrowserStorageProvider } from "../shared/storage/browser";
 import { createStorageProvider } from "../shared/storage";
@@ -17,6 +17,11 @@ export function App() {
     const [rootData, setRootData] = useState<RootData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
+    const rootDataRef = useRef<RootData | null>(null);
+
+    useEffect(() => {
+        rootDataRef.current = rootData;
+    }, [rootData]);
 
     useEffect(() => {
         bootstrapProvider.readData().then(setRootData).catch((err) => {
@@ -58,11 +63,12 @@ export function App() {
                         aiSuggestedTags: suggestedTags,
                         tags: bookmark.userModifiedTags ? bookmark.tags : suggestedTags
                     };
+                    const current = rootDataRef.current!;
                     const withAiTags: RootData = {
-                        ...updated,
-                        bookmarks: updated.bookmarks.map((b) => b.id === withTags.id ? withTags : b)
+                        ...current,
+                        bookmarks: current.bookmarks.map((b) => b.id === withTags.id ? withTags : b)
                     };
-                    await createStorageProvider(updated.settings).writeData(withAiTags);
+                    await createStorageProvider(current.settings).writeData(withAiTags);
                     setRootData(withAiTags);
                 }
             } catch {
