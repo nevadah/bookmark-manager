@@ -291,3 +291,10 @@ button.edit:hover {
     margin-top: 16px;
     text-align: center;
 }
+
+.import-section {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
