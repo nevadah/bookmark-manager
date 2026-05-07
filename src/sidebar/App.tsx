@@ -32,7 +32,21 @@ export function App() {
 
     async function handleSaveSettings(settings: Settings) {
         const base = rootData ?? { version: '1.0' as const, settings, bookmarks: [] };
-        const updated: RootData = { ...base, settings };
+        let updated: RootData = { ...base, settings };
+
+        if (settings.storageBackend === 'file') {
+            try {
+                const existing = await createStorageProvider(settings).readData();
+                if (existing.bookmarks.length > 0) {
+                    const fileUrls = new Set(existing.bookmarks.map((b) => b.url));
+                    const fromBrowser = updated.bookmarks.filter((b) => !fileUrls.has(b.url));
+                    updated = { ...updated, bookmarks: [...existing.bookmarks, ...fromBrowser] };
+                }
+            } catch {
+                // file is new or empty — no merge needed
+            }
+        }
+
         try {
             await createStorageProvider(settings).writeData(updated);
             setRootData(updated);
