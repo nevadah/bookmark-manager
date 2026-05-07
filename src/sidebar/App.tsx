@@ -126,7 +126,7 @@ export function App() {
     }
 
     return (
-        <div>
+        <div className="app">
             <nav>
                 <button className={view === 'bookmarks' ? 'active' : ''} onClick={() => setView('bookmarks')}>Bookmarks</button>
                 <button className={view === 'search' ? 'active' : ''} onClick={() => setView('search')}>Search</button>
