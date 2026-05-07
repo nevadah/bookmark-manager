@@ -1,4 +1,5 @@
 import { AIProvider } from "./types";
+import { TAG_SUGGESTION_PROMPT } from "./prompts";
 
 export class AnthropicProvider implements AIProvider {
     readonly id = 'anthropic';
@@ -28,10 +29,7 @@ export class AnthropicProvider implements AIProvider {
             body: JSON.stringify({
                 model: "claude-haiku-4-5-20251001",
                 max_tokens: 256,
-                system: `You are a bookmark tagging assistant. The user has an existing tag 
-                    vocabulary. Suggest tags for the given bookmark using existing tags where 
-                    appropriate, and introducing new tags only when nothing in the vocabulary fits.
-                    Respond with a JSON array of tag strings only. No explanation.`,
+                system: TAG_SUGGESTION_PROMPT,
                 messages: [
                     { role: "user", content: promptString }
                 ]
