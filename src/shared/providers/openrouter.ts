@@ -1,5 +1,6 @@
 import { AIProvider } from "./types";
 import { callOpenAICompatible } from "./openai-compatible";
+import { TAG_SUGGESTION_PROMPT } from "./prompts";
 
 export class OpenRouterProvider implements AIProvider {
     readonly id = 'openrouter';
@@ -23,10 +24,7 @@ export class OpenRouterProvider implements AIProvider {
             'https://openrouter.ai/api/v1/chat/completions',
             { 'Authorization': `Bearer ${this.apiKey}` },
             this.model,
-            `You are a bookmark tagging assistant. The user has an existing tag 
-                vocabulary. Suggest tags for the given bookmark using existing tags where 
-                appropriate, and introducing new tags only when nothing in the vocabulary fits.
-                Respond with a JSON array of tag strings only. No explanation`,
+            TAG_SUGGESTION_PROMPT,
             promptString
         );
     }

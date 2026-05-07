@@ -1,5 +1,6 @@
 import { AIProvider } from "./types";
 import { callOpenAICompatible } from "./openai-compatible";
+import { TAG_SUGGESTION_PROMPT } from "./prompts";
 
 export class AzureOpenAIProvider implements AIProvider {
     readonly id = 'azure-openai';
@@ -23,10 +24,7 @@ export class AzureOpenAIProvider implements AIProvider {
             `${this.endpoint}/openai/deployments/${this.deployment}/chat/completions?api-version=2024-02-01`,
             { 'api-key': this.apiKey },
             this.deployment,
-            `You are a bookmark tagging assistant. The user has an existing tag 
-                vocabulary. Suggest tags for the given bookmark using existing tags where 
-                appropriate, and introducing new tags only when nothing in the vocabulary fits.
-                Respond with a JSON array of tag strings only. No explanation`,
+            TAG_SUGGESTION_PROMPT,
             promptString
         );
     }
