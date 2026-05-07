@@ -7,6 +7,7 @@ import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
 import { SearchView } from "./SearchView";
 import { EditPanel } from "./EditPanel";
+import { importBrowserBookmarks } from "../shared/import";
 
 type View = 'bookmarks' | 'search' | 'settings';
 
@@ -99,6 +100,23 @@ export function App() {
         }
     }
 
+    async function handleImport(): Promise<{ imported: number; skipped: number }> {
+        const tree = await chrome.bookmarks.getTree();
+        const candidates = importBrowserBookmarks(tree);
+        const existingUrls = new Set(rootData!.bookmarks.map((b) => b.url));
+        const newBookmarks = candidates.filter((c) => !existingUrls.has(c.url));
+        const skipped = candidates.length - newBookmarks.length;
+        if (newBookmarks.length > 0) {
+            const updatedData: RootData = {
+                ...rootData!,
+                bookmarks: [...rootData!.bookmarks, ...newBookmarks]
+            };
+            await createStorageProvider(rootData!.settings).writeData(updatedData);
+            setRootData(updatedData);
+        }
+        return { imported: newBookmarks.length, skipped };
+    }
+
     if (error) {
         return <div>Error: {error}</div>;
     }
@@ -117,7 +135,7 @@ export function App() {
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
                 {view === 'search' && <SearchView bookmarks={rootData.bookmarks} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
-                {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} />}
+                {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} onImport={handleImport} />}
             </main>
             {editingBookmark && (
                 <EditPanel
