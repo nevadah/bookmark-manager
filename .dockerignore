@@ -1,0 +1,10 @@
+node_modules
+packages/*/node_modules
+packages/extension
+packages/*/dist
+packages/*/dist-firefox
+.git
+.github
+*.md
+.env
+.env.*
