@@ -78,11 +78,25 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: 
     return (
         <div>
             <div className="bookmarks-toolbar">
-                <button onClick={handleSaveCurrentPage}>Save Current Page</button>
+                <button className="icon-btn" onClick={handleSaveCurrentPage} data-tooltip="Save Current Page">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v12l-5-2.5L3 14V2z"/>
+                    </svg>
+                </button>
                 {tree.size > 0 && (
                     <>
-                        <button onClick={() => setExpandSignal(s => ({ expanded: true, version: (s?.version ?? 0) + 1 }))}>Expand All</button>
-                        <button onClick={() => setExpandSignal(s => ({ expanded: false, version: (s?.version ?? 0) + 1 }))}>Collapse All</button>
+                        <button className="icon-btn" onClick={() => setExpandSignal(s => ({ expanded: true, version: (s?.version ?? 0) + 1 }))} data-tooltip="Expand All">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="4,3 8,7 12,3"/>
+                                <polyline points="4,8 8,12 12,8"/>
+                            </svg>
+                        </button>
+                        <button className="icon-btn" onClick={() => setExpandSignal(s => ({ expanded: false, version: (s?.version ?? 0) + 1 }))} data-tooltip="Collapse All">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="4,8 8,4 12,8"/>
+                                <polyline points="4,13 8,9 12,13"/>
+                            </svg>
+                        </button>
                     </>
                 )}
             </div>
