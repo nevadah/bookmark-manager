@@ -1,6 +1,9 @@
 node_modules/
 dist/
 dist-firefox/
+.env
+.env.*
+!.env.example
 .claude/settings.local.json
 
 # Beads / Dolt files (added by bd init)

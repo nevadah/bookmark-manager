@@ -62,5 +62,4 @@ model Bookmark {
   user User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   org  Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  @@check(name: "bookmark_owner_check", expression: "(user_id IS NOT NULL) != (org_id IS NOT NULL)")
 }
