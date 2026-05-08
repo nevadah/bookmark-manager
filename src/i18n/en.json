@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "bookmarks": "Bookmarks",
+    "settings": "Settings"
+  },
+  "app": {
+    "loading": "Loading...",
+    "error": "Error: {{message}}"
+  },
+  "bookmarksView": {
+    "filterPlaceholder": "Filter bookmarks...",
+    "emptyState": "No bookmarks yet. Save a page to get started.",
+    "noResults": "No bookmarks match your search.",
+    "saveCurrentPage": "Save Current Page",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
+    "untagged": "Untagged"
+  },
+  "editPanel": {
+    "heading": "Edit Bookmark",
+    "titleLabel": "Title",
+    "urlLabel": "URL",
+    "addTagPlaceholder": "Add tag...",
+    "suggestTags": "Suggest Tags",
+    "suggesting": "Suggesting..."
+  },
+  "settings": {
+    "aiProvider": "AI Provider",
+    "aiApiKey": "AI API Key",
+    "azureEndpoint": "Azure Endpoint",
+    "azureDeployment": "Azure Deployment",
+    "openRouterModel": "OpenRouter Model",
+    "storageBackend": "Storage Backend",
+    "storageBrowser": "Browser",
+    "storageFile": "File",
+    "selectFile": "Select File...",
+    "selectedFile": "Selected File: {{name}}",
+    "openInNewTab": "Open bookmarks in new tab",
+    "saveSettings": "Save Settings",
+    "importFromBrowser": "Import from Browser",
+    "importResult_one": "Imported {{count}} bookmark.",
+    "importResult_other": "Imported {{count}} bookmarks.",
+    "importResultWithSkipped_one": "Imported {{count}} bookmark ({{skipped}} skipped as duplicates).",
+    "importResultWithSkipped_other": "Imported {{count}} bookmarks ({{skipped}} skipped as duplicates)."
+  }
+}
