@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookmarks      Bookmark[]
+  orgMemberships OrgMembership[]
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookmarks   Bookmark[]
+  memberships OrgMembership[]
+}
+
+model OrgMembership {
+  id     String           @id @default(uuid())
+  role   OrgRole
+  userId String
+  orgId  String
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+}
+
+enum OrgRole {
+  MEMBER
+  EDITOR
+  ADMIN
+}
+
+model Bookmark {
+  id          String   @id @default(uuid())
+  url         String
+  title       String
+  description String   @default("")
+  tags        String[]
+  faviconUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String?
+  orgId  String?
+
+  user User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@check(name: "bookmark_owner_check", expression: "(user_id IS NOT NULL) != (org_id IS NOT NULL)")
+}
