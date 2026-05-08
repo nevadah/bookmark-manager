@@ -1,6 +1,6 @@
 # Bookmark Manager
 
-An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Your data stays under your control — works entirely locally with no accounts required, with an optional backend service coming later for sync and team use.
+An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Tag-based organization with AI-assisted auto-tagging. Your data stays under your control — works entirely locally with no accounts required, with an optional backend service for sync and team use.
 
 ## Purpose
 
@@ -19,21 +19,53 @@ This is a learning project. It is not initially intended as something that will 
 - **Your data, your choice** — pick your storage backend:
   - **Local file** — a single JSON file you control; place it in Dropbox/OneDrive/iCloud for free sync across machines
   - **Browser storage** — stored in your browser profile, no file picker required
-  - **Backend service** *(coming later)* — self-hostable or managed; removes the need for your own AI API key
-- **Cross-browser** — standard WebExtensions API targeting Chromium (Chrome, Edge, Brave, Vivaldi, Opera)
+  - **Backend service** *(in development)* — self-hostable or managed; removes the need for your own AI API key
+- **Cross-browser** — targets Chromium (Chrome, Edge, Brave, Vivaldi, Opera) and Firefox
 
 ## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Language | TypeScript |
-| UI | React 18 |
+| Extension UI | React 18, Vite 6 |
 | Extension API | WebExtensions API, Manifest V3 |
-| Build | Vite 6 |
-| Data | Local JSON file or browser storage (pluggable `StorageProvider`) |
-| AI | REST calls to provider of choice |
+| Server | Fastify 5, Prisma 6, Node.js 22 |
+| Database | PostgreSQL 18 |
+| Testing | Vitest |
+| Monorepo | npm workspaces |
 
-## Development
+## Repository structure
+
+```
+packages/
+  extension/        browser extension (Chrome + Firefox)
+    src/
+      background/   service worker
+      sidebar/      React app — main extension UI
+      providers/    AI provider abstraction and implementations
+      storage/      StorageProvider abstraction and implementations
+      i18n/         localization (react-i18next)
+    public/
+      manifest.json         Chrome MV3 manifest
+      manifest.firefox.json Firefox overrides (applied at build time)
+      sidebar/              static HTML shell
+  shared/           types and constants shared across packages
+    src/shared/
+      types/        shared TypeScript types and data model
+      providers/    AI prompt constants
+  server/           optional backend service
+    src/
+      plugins/      Fastify plugins (Prisma client, session auth)
+      routes/       API route handlers
+      test/         integration tests
+    prisma/
+      schema.prisma database schema
+      migrations/   applied migration history
+```
+
+---
+
+## Extension development
 
 ### Prerequisites
 
@@ -49,21 +81,16 @@ npm install
 ### Build
 
 ```bash
-npm run build        # production build → dist/
-npm run dev          # watch mode
+npm run build          # Chrome production build → packages/extension/dist/
+npm run build:firefox  # Firefox build → packages/extension/dist-firefox/
+npm run dev            # watch mode (Chrome)
 ```
 
 ### Quality gates
 
 ```bash
-npm run check
-```
-
-This wraps the following commands:
-```bash
-npm run lint         # ESLint
-npm run typecheck    # tsc --noEmit
-npm run build        # Vite build
+npm run check   # lint + typecheck + build (both packages)
+npm run test    # unit and integration tests (see Testing section)
 ```
 
 ### Load in Chrome
@@ -71,58 +98,88 @@ npm run build        # Vite build
 1. Run `npm run build`
 2. Open `chrome://extensions`
 3. Enable **Developer mode** (top-right toggle)
-4. Click **Load unpacked** and select the `dist/` folder
+4. Click **Load unpacked** and select `packages/extension/dist/`
 5. Click the extension icon in the toolbar to open the sidebar
 
-After making changes, run `npm run build` again and click the reload button on the extension card in `chrome://extensions`.
+After making changes, run `npm run build` again and click the reload button on the extension card.
 
-## Project structure
+### Load in Firefox
 
-```
-src/
-  background/     service worker (MV3 background context)
-  sidebar/        React app — main extension UI
-  content/        content scripts (page interaction)
-  shared/
-    types/        shared TypeScript types and data model
-    providers/    AI provider abstraction and implementations
-    storage/      StorageProvider abstraction and implementations
-public/
-  manifest.json   MV3 extension manifest
-  sidebar/        static HTML shell for the sidebar
-```
+1. Run `npm run build:firefox`
+2. Open `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on** and select any file inside `packages/extension/dist-firefox/`
 
-## Data model
+---
 
-Bookmark data is stored as JSON (structure is the same regardless of storage backend):
+## Server development
 
-```json
-{
-  "version": "1.0",
-  "settings": {
-    "aiProvider": "anthropic",
-    "aiApiKey": "sk-ant-...",
-    "storageBackend": "file"
-  },
-  "bookmarks": [
-    {
-      "id": "uuid-v4",
-      "url": "https://example.com",
-      "title": "Example Site",
-      "description": "",
-      "tags": ["programming/rust", "tools/cli"],
-      "faviconUrl": "https://example.com/favicon.ico",
-      "faviconCache": null,
-      "createdAt": "2026-04-27T12:00:00Z",
-      "aiSuggestedTags": ["programming/rust"],
-      "userModifiedTags": true
-    }
-  ]
-}
+### Additional prerequisites
+
+- PostgreSQL 18 — install from [postgresql.org/download](https://www.postgresql.org/download/). Keep the default port (5432).
+
+### Database setup
+
+Create the development and test databases (run once):
+
+```bash
+createdb -U postgres bookmark_manager
+createdb -U postgres bookmark_manager_test
 ```
 
-Azure OpenAI additionally requires `azureEndpoint` and `azureDeployment` in settings. OpenRouter additionally requires `openRouterModel`.
+### Environment setup
+
+Create `packages/server/.env`:
+
+```
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/bookmark_manager"
+```
+
+Create `packages/server/.env.test`:
+
+```
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/bookmark_manager_test"
+```
+
+Both files are git-ignored. See `packages/server/.env.example` for the required format.
+
+### Apply migrations
+
+```bash
+cd packages/server
+npx prisma migrate dev
+```
+
+### Start the server
+
+```bash
+npm run dev -w @bookmark-manager/server
+```
+
+The server starts on `http://localhost:3000`. OpenAPI docs are available at `http://localhost:3000/docs`.
+
+---
+
+## Testing
+
+Tests use Vitest. Server integration tests run against the `bookmark_manager_test` database — PostgreSQL must be running and `.env.test` must be configured before running them.
+
+```bash
+npm run test                                 # all tests (extension + server)
+npm run test -w @bookmark-manager/server     # server only
+npm run test -w @bookmark-manager/extension  # extension only
+```
+
+---
 
 ## CI
 
-GitHub Actions runs lint → typecheck → build on every push and pull request to `main`.
+GitHub Actions runs on every push and pull request to `main`:
+
+1. **Lint** — ESLint across all packages
+2. **Typecheck** — `tsc --noEmit` across all packages
+3. **Build** — Chrome and Firefox extension builds
+4. **Test** — all tests; CI spins up a PostgreSQL 18 service container for the server integration tests
+
+Artifact builds (Chrome `.zip` and Firefox `.xpi`) are produced on every PR and attached to the workflow run for manual testing.
+
+Release builds are produced on `v*.*.*` tags and attached to a GitHub Release.
