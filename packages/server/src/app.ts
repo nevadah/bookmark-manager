@@ -6,6 +6,7 @@ import { prismaPlugin } from './plugins/prisma.js';
 import { sessionPlugin } from './plugins/session.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
+import { bookmarkRoutes } from './routes/bookmarks.js';
 
 export async function buildApp() {
   const app = Fastify({ logger: true });
@@ -36,6 +37,7 @@ if (process.env.NODE_ENV !== 'test') {
 
   await app.register(healthRoutes);
   await app.register(authRoutes);
+  await app.register(bookmarkRoutes);
 
   return app;
 }
