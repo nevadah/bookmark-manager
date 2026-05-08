@@ -5,12 +5,11 @@ export type RootDataVersion = '1.0';
 
 export interface Settings {
     aiProvider: AIProviderID;
-    aiApiKey: string;
     storageBackend: StorageBackend;
     azureEndpoint?: string;
     azureDeployment?: string;
     openRouterModel?: string;
-    openInNewTab: boolean;
+    openInNewTab?: boolean;
 }
 
 export interface Bookmark {

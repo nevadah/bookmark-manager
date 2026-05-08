@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { RootData, Settings, Bookmark } from '@bookmark-manager/shared';
 import { BrowserStorageProvider } from "../storage/browser";
 import { createStorageProvider } from "../storage";
+import { getApiKey, saveApiKey } from "../storage/credentials";
 import { createProvider } from "../providers";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
@@ -17,6 +18,7 @@ export function App() {
     const { t } = useTranslation();
     const [view, setView] = useState<View>('bookmarks');
     const [rootData, setRootData] = useState<RootData | null>(null);
+    const [apiKey, setApiKey] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
     const rootDataRef = useRef<RootData | null>(null);
@@ -26,7 +28,13 @@ export function App() {
     }, [rootData]);
 
     useEffect(() => {
-        bootstrapProvider.readData().then(setRootData).catch((err) => {
+        Promise.all([
+            bootstrapProvider.readData(),
+            getApiKey(),
+        ]).then(([data, key]) => {
+            setRootData(data);
+            setApiKey(key);
+        }).catch((err) => {
             setError('Failed to load data: ' + err.message);
         });
     }, []);
@@ -52,8 +60,7 @@ export function App() {
         return () => chrome.tabs.onUpdated.removeListener(handleTabUpdate);
     }, []);
 
-
-    async function handleSaveSettings(settings: Settings) {
+    async function handleSaveSettings(settings: Settings, newApiKey: string) {
         const base = rootData ?? { version: '1.0' as const, settings, bookmarks: [] };
         let updated: RootData = { ...base, settings };
 
@@ -72,7 +79,9 @@ export function App() {
 
         try {
             await createStorageProvider(settings).writeData(updated);
+            await saveApiKey(newApiKey);
             setRootData(updated);
+            setApiKey(newApiKey);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save settings');
         }
@@ -90,10 +99,9 @@ export function App() {
             setError(err instanceof Error ? err.message : 'Failed to save bookmark');
         }
 
-        // AI tagging in the background. Don't await, don't block
-        if (rootData!.settings.aiApiKey) {
+        if (apiKey) {
             try {
-                const provider = createProvider(rootData!.settings);
+                const provider = createProvider(rootData!.settings, apiKey);
                 const suggestedTags = await provider.suggestTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
                 if (suggestedTags.length > 0) {
                     const withTags: Bookmark = {
@@ -110,7 +118,7 @@ export function App() {
                     setRootData(withAiTags);
                 }
             } catch {
-                // Silently fail on AI errors. Bookmark is already saved, just without AI tags
+                // Silently fail on AI errors
             }
         }
     }
@@ -139,7 +147,7 @@ export function App() {
 
     async function fetchSuggestedTags(url: string, title: string, description: string, tags: string[]): Promise<string[]> {
         try {
-            const provider = createProvider(rootData!.settings);
+            const provider = createProvider(rootData!.settings, apiKey);
             return await provider.suggestTags(url, title, description, tags);
         } catch {
             return [];
@@ -179,7 +187,7 @@ export function App() {
             </nav>
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={rootData.settings.openInNewTab ?? true} />}
-                {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} onImport={handleImport} />}
+                {view === 'settings' && <SettingsView settings={rootData.settings} apiKey={apiKey} onSave={handleSaveSettings} onImport={handleImport} />}
             </main>
             {editingBookmark && (
                 <EditPanel
@@ -189,7 +197,7 @@ export function App() {
                         setEditingBookmark(updated);
                     }}
                     onClose={() => setEditingBookmark(null)}
-                    onSuggestTags={rootData.settings.aiApiKey ? fetchSuggestedTags : undefined}
+                    onSuggestTags={apiKey ? fetchSuggestedTags : undefined}
                 />
             )}
         </div>
