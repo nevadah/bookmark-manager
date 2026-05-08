@@ -16,6 +16,7 @@ model User {
 
   bookmarks      Bookmark[]
   orgMemberships OrgMembership[]
+  sessions       Session[]
 }
 
 model Organization {
@@ -38,6 +39,16 @@ model OrgMembership {
   org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@unique([userId, orgId])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum OrgRole {

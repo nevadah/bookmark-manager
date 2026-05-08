@@ -1,7 +1,11 @@
 import Fastify from 'fastify';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import rateLimit from '@fastify/rate-limit';
+import { prismaPlugin } from './plugins/prisma.js';
+import { sessionPlugin } from './plugins/session.js';
 import { healthRoutes } from './routes/health.js';
+import { authRoutes } from './routes/auth.js';
 
 export async function buildApp() {
   const app = Fastify({ logger: true });
@@ -19,7 +23,17 @@ export async function buildApp() {
     routePrefix: '/docs',
   });
 
+  await app.register(rateLimit, {
+    max: 10,
+    timeWindow: '1 minute',
+    keyGenerator: (request) => request.ip,
+  });
+
+  await app.register(prismaPlugin);
+  await app.register(sessionPlugin);
+
   await app.register(healthRoutes);
+  await app.register(authRoutes);
 
   return app;
 }
