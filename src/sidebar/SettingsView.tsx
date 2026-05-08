@@ -64,7 +64,7 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
     }, [settings.storageBackend]);
 
     return (
-        <div>
+        <div className="settings-view">
             <form onSubmit={handleSubmit}>
                 <div>
                     <label>

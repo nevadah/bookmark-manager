@@ -98,10 +98,11 @@ nav button.active {
 }
 
 main {
-    padding: 12px;
+    padding: 0 12px 12px;
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+    background: var(--bg);
 }
 
 ul {
@@ -264,6 +265,16 @@ button.edit:hover {
     min-width: 0;
 }
 
+.bookmarks-toolbar {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    margin: 0 -12px 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
 .favicon {
     width: 16px;
     height: 16px;
@@ -318,4 +329,9 @@ button.edit:hover {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.search-view,
+.settings-view {
+    padding-top: 12px;
 }

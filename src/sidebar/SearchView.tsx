@@ -24,7 +24,7 @@ export function SearchView({ bookmarks, onUpdate, onDelete, onEdit }: SearchView
         : [];
 
     return (
-        <div>
+        <div className="search-view">
             <input
                 type="search"
                 value={query}
