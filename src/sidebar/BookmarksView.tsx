@@ -15,6 +15,7 @@ interface BookmarksViewProps {
     onUpdate: (bookmark: Bookmark) => void;
     onDelete: (id: string) => void;
     onEdit: (bookmark: Bookmark) => void;
+    openInNewTab: boolean;
 }
 
 function buildTagTree(bookmarks: Bookmark[]): Map<string, TagNode> {
@@ -43,7 +44,7 @@ function buildTagTree(bookmarks: Bookmark[]): Map<string, TagNode> {
     return root;
 }
 
-export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: BookmarksViewProps) {
+export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, openInNewTab }: BookmarksViewProps) {
     const [expandSignal, setExpandSignal] = useState<{ expanded: boolean, version: number } | null>(null);
     const [filterQuery, setFilterQuery] = useState('');
 
@@ -125,14 +126,14 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: 
                 :
                 <ul className="tag-tree">
                     {Array.from(tree.values()).map((node) => (
-                        <TagTreeNode key={node.fullPath} node={node} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} expandSignal={expandSignal} />
+                        <TagTreeNode key={node.fullPath} node={node} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} expandSignal={expandSignal} openInNewTab={openInNewTab} />
                     ))}
                     {untagged.length > 0 && (
                         <li className="tree-node">
                             <span className="tree-label">Untagged</span>
                             <ul>
                                 {untagged.map((bookmark) => (
-                                    <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} />
+                                    <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} openInNewTab={openInNewTab} />
                                 ))}
                             </ul>
                         </li>
@@ -143,12 +144,13 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: 
     );
 }
 
-function TagTreeNode({ node, onUpdate, onDelete, onEdit, expandSignal }: {
+function TagTreeNode({ node, onUpdate, onDelete, onEdit, expandSignal, openInNewTab }: {
     node: TagNode;
     onUpdate: (bookmark: Bookmark) => void;
     onDelete: (id: string) => void;
     onEdit: (bookmark: Bookmark) => void;
     expandSignal?: { expanded: boolean; version: number } | null;
+    openInNewTab: boolean;
 }) {
     const [expanded, setExpanded] = useState(true);
     const hasBookmarks = node.bookmarks.length > 0;
@@ -167,10 +169,10 @@ function TagTreeNode({ node, onUpdate, onDelete, onEdit, expandSignal }: {
             {expanded && (
                 <ul>
                     {Array.from(node.children.values()).map((child) => (
-                        <TagTreeNode key={child.fullPath} node={child} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} expandSignal={expandSignal} />
+                        <TagTreeNode key={child.fullPath} node={child} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} expandSignal={expandSignal} openInNewTab={openInNewTab} />
                     ))}
                     {hasBookmarks && node.bookmarks.map((bookmark) => (
-                        <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} />
+                        <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} openInNewTab={openInNewTab} />
                     ))}
                 </ul>
             )}

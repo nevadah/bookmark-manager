@@ -10,6 +10,7 @@ export interface Settings {
     azureEndpoint?: string;
     azureDeployment?: string;
     openRouterModel?: string;
+    openInNewTab: boolean;
 }
 
 export interface Bookmark {

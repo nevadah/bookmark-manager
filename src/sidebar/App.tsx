@@ -176,7 +176,7 @@ export function App() {
                 <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>Settings</button>
             </nav>
             <main>
-                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
+                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={rootData.settings.openInNewTab ?? true} />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} onImport={handleImport} />}
             </main>
             {editingBookmark && (
