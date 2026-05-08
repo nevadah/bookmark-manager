@@ -1,6 +1,12 @@
 # Data Model
 
-## Root file structure
+This document covers both the local data model (used by the extension with file or browser storage) and the server-side database schema.
+
+---
+
+## Local data model (extension)
+
+### Root file structure
 
 The entire data store is a single JSON file the user controls.
 
@@ -28,9 +34,12 @@ The entire data store is a single JSON file the user controls.
 |---|---|---|
 | `aiProvider` | `"anthropic" \| "openai" \| "azure-openai" \| "openrouter"` | Selected AI provider |
 | `aiApiKey` | string | User's API key for the selected provider. Stored locally only — never transmitted except to the chosen provider |
-| `storageBackend` | `"file" \| "browser" ` | Which storage backend to use |
+| `storageBackend` | `"file" \| "browser"` | Which storage backend to use |
+| `openInNewTab` | boolean | Whether clicking a bookmark opens it in a new tab (default: `true`) |
 
-## Bookmark object
+Azure OpenAI additionally requires `azureEndpoint` and `azureDeployment` in settings. OpenRouter additionally requires `openRouterModel`.
+
+### Bookmark object
 
 ```json
 {
@@ -60,7 +69,7 @@ The entire data store is a single JSON file the user controls.
 | `aiSuggestedTags` | string[] | The raw tags the AI returned, preserved for analysis |
 | `userModifiedTags` | boolean | `true` if the user changed the AI suggestions before saving |
 
-## Tag model
+### Tag model
 
 Tags are plain strings stored on each bookmark. The `/` character is reserved as a hierarchy separator and is not valid within a tag segment.
 
@@ -74,13 +83,13 @@ The tag tree is **derived at runtime** by scanning all bookmarks — there is no
 
 The one operation that requires a full sweep is **tag rename**, which is handled by a dedicated `renameTag(oldName, newName)` function that iterates all bookmarks and rewrites matching tag strings (including prefix matches for child tags).
 
-### Tag validity rules
+#### Tag validity rules
 
 - Cannot be empty
 - Cannot contain `/` as anything other than a hierarchy separator (i.e., cannot start or end with `/`, cannot contain `//`)
 - Segments are case-sensitive (`Rust` and `rust` are different tags)
 
-## Versioning and migration
+### Versioning and migration
 
 The `version` field enables forward-compatible schema changes. On load:
 
@@ -89,10 +98,70 @@ The `version` field enables forward-compatible schema changes. On load:
 3. If the version is unknown or ahead of the current schema version, surface an error — do not silently overwrite data from a newer version of the extension.
 4. If the version is behind the current schema, run the appropriate migration function and write the result back to the file before continuing.
 
-Migration functions live in `src/shared/storage/migrations.ts` and are indexed by the version string they upgrade from. Each migration is a pure function `(data: unknown) => RootData`.
+Migration functions live in `packages/extension/src/storage/migrations.ts` and are indexed by the version string they upgrade from. Each migration is a pure function `(data: unknown) => RootData`.
 
-### Version history
+#### Version history
 
 | Version | Changes |
 |---|---|
 | `1.0` | Initial schema |
+
+---
+
+## Server-side data model (PostgreSQL)
+
+The backend service uses PostgreSQL with Prisma. The schema is defined in `packages/server/prisma/schema.prisma`.
+
+### Tables
+
+#### `User`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `email` | string | Unique |
+| `passwordHash` | string | Argon2 hash |
+| `createdAt` | timestamp | |
+| `updatedAt` | timestamp | Auto-updated |
+
+#### `Session`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `tokenHash` | string | SHA-256 hash of the opaque session token; unique |
+| `userId` | UUID | Foreign key → `User` |
+| `expiresAt` | timestamp | 30 days from creation |
+| `createdAt` | timestamp | |
+
+#### `Organization`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `name` | string | |
+| `createdAt` | timestamp | |
+| `updatedAt` | timestamp | Auto-updated |
+
+#### `OrgMembership`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `userId` | UUID | Foreign key → `User` |
+| `orgId` | UUID | Foreign key → `Organization` |
+| `role` | enum | `MEMBER`, `EDITOR`, or `ADMIN` |
+
+Unique constraint on `(userId, orgId)` — a user can only have one role per org.
+
+#### `Bookmark`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `url` | string | |
+| `title` | string | |
+| `description` | string | Default empty string |
+| `tags` | string[] | PostgreSQL array with GIN index |
+| `faviconUrl` | string? | Nullable |
+| `userId` | UUID? | Nullable foreign key → `User` |
+| `orgId` | UUID? | Nullable foreign key → `Organization` |
+| `createdAt` | timestamp | |
+| `updatedAt` | timestamp | Auto-updated |
+
+A CHECK constraint enforces that exactly one of `userId` or `orgId` is non-null — every bookmark belongs to either a user or an organization, never both and never neither.

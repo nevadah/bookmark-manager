@@ -2,7 +2,7 @@
 
 ## Provider interface
 
-All AI providers implement a single interface defined in `src/shared/providers/types.ts`:
+All AI providers implement a single interface defined in `packages/extension/src/providers/types.ts`:
 
 ```typescript
 interface AIProvider {
@@ -64,16 +64,16 @@ Returns a one-to-two sentence summary of the page content. Used for the optional
 
 ## Adding a new provider
 
-1. Create `src/shared/providers/<name>.ts` implementing `AIProvider`.
-2. Add the provider ID to the `AIProviderID` union type in `src/shared/types/index.ts`.
-3. Add a case to the factory function in `src/shared/providers/index.ts` that instantiates the provider from settings.
+1. Create `packages/extension/src/providers/<name>.ts` implementing `AIProvider`.
+2. Add the provider ID to the `AIProviderID` union type in `packages/shared/src/shared/types/index.ts`.
+3. Add a case to the factory function in `packages/extension/src/providers/index.ts` that instantiates the provider from settings.
 4. Add the provider as an option in the settings UI.
 
 No other changes are needed — the rest of the codebase depends only on the `AIProvider` interface.
 
 ## Prompt design
 
-Tag suggestion prompt structure (all providers):
+Tag suggestion prompt constants live in `packages/shared/src/shared/providers/prompts.ts` and are shared between the extension and the server. Prompt structure (all providers):
 
 ```
 System: You are a bookmark tagging assistant. The user has an existing tag 

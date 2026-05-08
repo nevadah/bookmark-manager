@@ -1,6 +1,20 @@
 # Architecture
 
-## Extension contexts
+## Monorepo structure
+
+The project is organized as an npm workspaces monorepo with three packages:
+
+| Package | Path | Purpose |
+|---|---|---|
+| `@bookmark-manager/extension` | `packages/extension/` | Browser extension (Chrome + Firefox) |
+| `@bookmark-manager/shared` | `packages/shared/` | Types and constants shared across packages |
+| `@bookmark-manager/server` | `packages/server/` | Optional backend service |
+
+---
+
+## Extension
+
+### Extension contexts
 
 A Manifest V3 extension runs code in three isolated contexts. They cannot share memory — all coordination happens through message passing or shared storage.
 
@@ -34,9 +48,9 @@ Sidebar  ──sendMessage──▶  Background SW  ──fetch──▶  AI pro
 
 Content scripts are used only for reading page metadata (title, URL) at save time — they do not participate in storage or AI calls.
 
-## Storage abstraction
+### Storage abstraction
 
-All bookmark data access goes through a `StorageProvider` interface defined in `src/shared/storage/types.ts`. The rest of the application depends only on this interface — not on any specific backend.
+All bookmark data access goes through a `StorageProvider` interface defined in `packages/extension/src/storage/types.ts`. The rest of the application depends only on this interface — not on any specific backend.
 
 ```typescript
 interface StorageProvider {
@@ -45,9 +59,9 @@ interface StorageProvider {
 }
 ```
 
-Two implementations ship in MVP. The user chooses during setup; the choice is persisted in `chrome.storage.local`.
+Two local implementations ship currently. The user chooses during setup; the choice is persisted in `chrome.storage.local`.
 
-### FileSystemStorageProvider
+#### FileSystemStorageProvider
 
 Reads and writes a user-specified local JSON file using the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API).
 
@@ -60,19 +74,22 @@ Reads and writes a user-specified local JSON file using the [File System Access 
 
 Writes are full-file overwrites (read → mutate → write). At bookmark-manager scale this is fine; the file will rarely exceed a few hundred KB.
 
-### BrowserStorageProvider
+#### BrowserStorageProvider
 
 Reads and writes `chrome.storage.local` directly. Simpler setup — no file picker, no IndexedDB handle management. Data is tied to the browser profile and subject to `chrome.storage.local`'s quota (~10MB, sufficient for typical use).
 
-### Future: RemoteStorageProvider
+#### RemoteStorageProvider (planned)
 
-A third implementation is planned post-MVP. It will talk to a backend API, enabling native multi-device sync, team/org use, and SaaS deployment. The `StorageProvider` interface means adding it requires no changes to application code — only a new implementation and a new option in the settings UI.
+A third implementation will talk to the backend API, enabling native multi-device sync, team/org use, and SaaS deployment. The `StorageProvider` interface means adding it requires no changes to application code — only a new implementation and a new option in the settings UI.
 
-## Build output
+### Build output
 
-Vite produces a `dist/` directory loadable directly as an unpacked extension:
+Vite produces a directory loadable directly as an unpacked extension:
 
 ```
+packages/extension/dist/          Chrome build
+packages/extension/dist-firefox/  Firefox build
+
 dist/
   manifest.json          copied from public/
   background/index.js    service worker bundle
@@ -80,4 +97,62 @@ dist/
   sidebar/index.js       React app bundle
 ```
 
-The sidebar HTML in `public/sidebar/index.html` is static and references the built `../sidebar/index.js` bundle. Vite copies `public/` verbatim; only the JS entries go through Rollup.
+The Firefox build applies `public/manifest.firefox.json` over the Chrome manifest at the end of the build via a Vite `closeBundle` plugin.
+
+---
+
+## Server
+
+The backend service is a Node.js REST API built with Fastify and Prisma. It is optional — the extension works without it using local storage.
+
+### Stack
+
+| Layer | Technology |
+|---|---|
+| HTTP framework | Fastify 5 |
+| ORM | Prisma 6 |
+| Database | PostgreSQL 18 |
+| Auth | Server-side sessions (opaque tokens) |
+| API docs | `@fastify/swagger` + `@fastify/swagger-ui` (served at `/docs`) |
+
+### Application structure
+
+```
+packages/server/src/
+  index.ts          entry point — binds to port 3000
+  app.ts            Fastify app factory (buildApp) — registers plugins and routes
+  plugins/
+    prisma.ts       decorates app with a shared PrismaClient instance
+    session.ts      decorates app with an authenticate preHandler
+  routes/
+    health.ts       GET /health
+    auth.ts         POST /auth/signup, /auth/login, /auth/logout
+    bookmarks.ts    GET/POST/PATCH/DELETE /bookmarks
+```
+
+The `buildApp()` factory in `app.ts` is separate from `index.ts` so tests can import and run the app via `app.inject()` without binding to a port.
+
+### Authentication
+
+Authentication uses **server-side sessions** with opaque tokens:
+
+1. On signup or login, the server generates 32 bytes of cryptographically secure random data and returns it to the client as a 64-character hex string.
+2. The server stores a SHA-256 hash of the token in the `Session` table — the raw token is never persisted.
+3. Sessions expire after 30 days.
+4. Authenticated requests send `Authorization: Bearer <token>`; the server hashes it, looks up the session, checks expiry, and attaches the user to `request.user`.
+
+This design allows instant revocation (delete the session row) and is safe against database compromise (hashes cannot be reversed into usable tokens).
+
+### Database schema
+
+```
+User            — email, passwordHash
+Session         — tokenHash, userId, expiresAt
+Organization    — name
+OrgMembership   — userId, orgId, role (MEMBER | EDITOR | ADMIN)
+Bookmark        — url, title, description, tags[], faviconUrl, userId | orgId
+```
+
+Every `Bookmark` belongs to exactly one owner — either a `User` (personal) or an `Organization` (shared). A CHECK constraint enforces this at the database level.
+
+Migrations live in `packages/server/prisma/migrations/` and are applied with `prisma migrate deploy` (production/CI) or `prisma migrate dev` (local development).
