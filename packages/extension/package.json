@@ -9,7 +9,8 @@
     "build:firefox": "vite build --mode firefox",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run build && npm run build:firefox"
+    "check": "npm run lint && npm run typecheck && npm run build && npm run build:firefox",
+    "test": "vitest run"
   },
   "dependencies": {
     "@bookmark-manager/shared": "*",
@@ -30,6 +31,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.16.0",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vitest": "^3.0.0"
   }
 }
