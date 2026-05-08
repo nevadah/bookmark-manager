@@ -20,7 +20,9 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
     const [fileHandleName, setFileHandleName] = useState<string | null>(null);
     const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
     const openInNewTab = settings.openInNewTab ?? true;
-    const fileSystemSupported = typeof window.showSaveFilePicker === 'function';
+    const manifest = chrome.runtime.getManifest() as Record<string, unknown>;
+    const fileSystemSupported = typeof window.showSaveFilePicker === 'function' && !('browser_specific_settings' in manifest);
+
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
