@@ -3,6 +3,10 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "check": "npm run check -w @bookmark-manager/extension"
+    "check": "npm run check -w @bookmark-manager/extension",
+    "lint": "npm run lint -w @bookmark-manager/extension",
+    "typecheck": "npm run typecheck -w @bookmark-manager/extension",
+    "build": "npm run build -w @bookmark-manager/extension",
+    "build:firefox": "npm run build:firefox -w @bookmark-manager/extension"
   }
 }
