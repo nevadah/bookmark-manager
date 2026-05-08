@@ -1,0 +1,40 @@
+name: Build Extension Artifacts
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build -w @bookmark-manager/extension
+
+      - name: Package Chrome extension
+        run: cd packages/extension/dist && zip -r ../chrome-extension.zip .
+
+      - name: Upload Chrome artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension
+          path: packages/extension/chrome-extension.zip
+
+      - run: npm run build:firefox -w @bookmark-manager/extension
+
+      - name: Package Firefox extension
+        run: cd packages/extension/dist-firefox && zip -r ../firefox-extension.xpi .
+
+      - name: Upload Firefox artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-extension
+          path: packages/extension/firefox-extension.xpi
