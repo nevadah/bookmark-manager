@@ -114,6 +114,15 @@ export function App() {
         }
     }
 
+    async function fetchSuggestedTags(url: string, title: string, description: string, tags: string[]): Promise<string[]> {
+        try {
+            const provider = createProvider(rootData!.settings);
+            return await provider.suggestTags(url, title, description, tags);
+        } catch {
+            return [];
+        }
+    }
+
     async function handleImport(): Promise<{ imported: number; skipped: number }> {
         const tree = await chrome.bookmarks.getTree();
         const candidates = importBrowserBookmarks(tree);
@@ -159,6 +168,7 @@ export function App() {
                         setEditingBookmark(updated);
                     }}
                     onClose={() => setEditingBookmark(null)}
+                    onSuggestTags={rootData.settings.aiApiKey ? fetchSuggestedTags : undefined}
                 />
             )}
         </div>
