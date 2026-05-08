@@ -23,8 +23,7 @@
   ],
 
   "background": {
-    "service_worker": "background/index.js",
-    "type": "module"
+      "scripts": ["background/index.js"]
   },
 
   "sidebar_action": {
