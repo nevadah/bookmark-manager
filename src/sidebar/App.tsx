@@ -29,6 +29,28 @@ export function App() {
         });
     }, []);
 
+    useEffect(() => {
+        async function handleTabUpdate(_tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
+            if (!changeInfo.favIconUrl || !tab.url) return;
+            const current = rootDataRef.current;
+            if (!current) return;
+            const bookmark = current.bookmarks.find((b) => b.url === tab.url && !b.faviconUrl);
+            if (!bookmark) return;
+            const updated = { ...bookmark, faviconUrl: changeInfo.favIconUrl };
+            const bookmarks = current.bookmarks.map((b) => b.id === updated.id ? updated : b);
+            const updatedData = { ...current, bookmarks };
+            try {
+                await createStorageProvider(current.settings).writeData(updatedData);
+                setRootData(updatedData);
+            } catch {
+                // silently fail — favicon is non-critical
+            }
+        }
+        chrome.tabs.onUpdated.addListener(handleTabUpdate);
+        return () => chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+    }, []);
+
+
     async function handleSaveSettings(settings: Settings) {
         const base = rootData ?? { version: '1.0' as const, settings, bookmarks: [] };
         let updated: RootData = { ...base, settings };
