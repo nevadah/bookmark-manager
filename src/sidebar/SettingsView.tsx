@@ -17,6 +17,7 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
     const [openRouterModel, setOpenRouterModel] = useState(settings.openRouterModel ?? '');
     const [fileHandleName, setFileHandleName] = useState<string | null>(null);
     const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
+    const openInNewTab = settings.openInNewTab ?? true;
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -24,7 +25,8 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
         const newSettings: Settings = {
             aiProvider,
             aiApiKey,
-            storageBackend
+            storageBackend,
+            openInNewTab
         };
         if (aiProvider === 'azure-openai') {
             newSettings.azureEndpoint = azureEndpoint;
@@ -122,6 +124,14 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
                         {fileHandleName && <span>Selected File: {fileHandleName}</span>}
                     </div>
                 )}
+                <label className="checkbox-label">
+                    <input
+                        type="checkbox"
+                        checked={openInNewTab}
+                        onChange={(e) => onSave({ ...settings, openInNewTab: e.target.checked })}
+                    />
+                    Open bookmarks in new tab
+                </label>
                 <button type="submit" disabled={storageBackend === 'file' && !fileHandleName}>Save Settings</button>
             </form>
             <div className="import-section">
