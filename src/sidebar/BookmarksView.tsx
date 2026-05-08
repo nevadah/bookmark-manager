@@ -45,8 +45,22 @@ function buildTagTree(bookmarks: Bookmark[]): Map<string, TagNode> {
 
 export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: BookmarksViewProps) {
     const [expandSignal, setExpandSignal] = useState<{ expanded: boolean, version: number } | null>(null);
-    const tree = buildTagTree(bookmarks);
-    const untagged = bookmarks.filter((b) => b.tags.length === 0);
+    const [filterQuery, setFilterQuery] = useState('');
+
+    const filtered = filterQuery.trim().toLowerCase()
+        ? bookmarks.filter((b) => {
+            const q = filterQuery.toLowerCase();
+            return (
+                b.title.toLowerCase().includes(q) ||
+                b.url.toLowerCase().includes(q) ||
+                b.tags.some(tag => tag.toLowerCase().includes(q)) ||
+                b.description.toLowerCase().includes(q)
+            );
+        })
+        : bookmarks;
+
+    const tree = buildTagTree(filtered);
+    const untagged = filtered.filter((b) => b.tags.length === 0);
 
     async function handleSaveCurrentPage() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -99,22 +113,32 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: 
                         </button>
                     </>
                 )}
+                <input
+                    type="search"
+                    placeholder="Search bookmarks..."
+                    value={filterQuery}
+                    onChange={(e) => setFilterQuery(e.target.value)}
+                />
             </div>
-            <ul className="tag-tree">
-                {Array.from(tree.values()).map((node) => (
-                    <TagTreeNode key={node.fullPath} node={node} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} expandSignal={expandSignal} />
-                ))}
-                {untagged.length > 0 && (
-                    <li className="tree-node">
-                        <span className="tree-label">Untagged</span>
-                        <ul>
-                            {untagged.map((bookmark) => (
-                                <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} />
-                            ))}
-                        </ul>
-                    </li>
-                )}
-            </ul>
+            {filterQuery.trim() && filtered.length === 0
+                ? <p className="empty-state">No bookmarks match your search.</p>
+                :
+                <ul className="tag-tree">
+                    {Array.from(tree.values()).map((node) => (
+                        <TagTreeNode key={node.fullPath} node={node} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} expandSignal={expandSignal} />
+                    ))}
+                    {untagged.length > 0 && (
+                        <li className="tree-node">
+                            <span className="tree-label">Untagged</span>
+                            <ul>
+                                {untagged.map((bookmark) => (
+                                    <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} />
+                                ))}
+                            </ul>
+                        </li>
+                    )}
+                </ul>
+            }
         </div>
     );
 }

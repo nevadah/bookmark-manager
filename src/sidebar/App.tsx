@@ -5,11 +5,10 @@ import { createStorageProvider } from "../shared/storage";
 import { createProvider } from "../shared/providers";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
-import { SearchView } from "./SearchView";
 import { EditPanel } from "./EditPanel";
 import { importBrowserBookmarks } from "../shared/import";
 
-type View = 'bookmarks' | 'search' | 'settings';
+type View = 'bookmarks' | 'settings';
 
 const bootstrapProvider = new BrowserStorageProvider();
 
@@ -152,12 +151,10 @@ export function App() {
         <div className="app">
             <nav>
                 <button className={view === 'bookmarks' ? 'active' : ''} onClick={() => setView('bookmarks')}>Bookmarks</button>
-                <button className={view === 'search' ? 'active' : ''} onClick={() => setView('search')}>Search</button>
                 <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>Settings</button>
             </nav>
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
-                {view === 'search' && <SearchView bookmarks={rootData.bookmarks} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} />}
                 {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} onImport={handleImport} />}
             </main>
             {editingBookmark && (
