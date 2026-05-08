@@ -45,11 +45,6 @@
     padding: 0;
 }
 
-#root {
-    width: 100%;
-    height: 100%;
-}
-
 html {
     height: 100%;
 }
@@ -62,6 +57,11 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
 }
 
 .app {
@@ -156,48 +156,6 @@ button:hover {
     background: var(--btn-hover);
 }
 
-/* Tag chips */
-.tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 4px;
-    align-items: center;
-}
-
-.tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    background: var(--tag-bg);
-    color: var(--tag-text);
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 12px;
-}
-
-.tag button {
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--tag-text);
-    font-size: 14px;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-}
-
-.tag button:hover {
-    color: var(--danger);
-}
-
-.tags input {
-    width: auto;
-    flex: 1;
-    min-width: 80px;
-}
-
 button.delete {
     background: none;
     border: none;
@@ -220,6 +178,16 @@ button.edit {
 
 button.edit:hover {
     color: var(--accent);
+}
+
+.bookmarks-toolbar {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    margin: 0 -12px 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
 }
 
 .tag-tree {
@@ -265,21 +233,52 @@ button.edit:hover {
     min-width: 0;
 }
 
-.bookmarks-toolbar {
-    position: sticky;
-    top: 0;
-    background: var(--bg);
-    z-index: 10;
-    margin: 0 -12px 8px;
-    padding: 12px;
-    border-bottom: 1px solid var(--border);
-}
-
 .favicon {
     width: 16px;
     height: 16px;
     flex-shrink: 0;
     object-fit: contain;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    align-items: center;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+.tag button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--tag-text);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.tag button:hover {
+    color: var(--danger);
+}
+
+.tags input {
+    width: auto;
+    flex: 1;
+    min-width: 80px;
 }
 
 .edit-panel {
@@ -317,13 +316,6 @@ button.edit:hover {
     color: var(--panel-label);
 }
 
-.empty-state {
-    color: var(--text-subtle);
-    font-size: 13px;
-    margin-top: 16px;
-    text-align: center;
-}
-
 .import-section {
     margin-top: 16px;
     display: flex;
@@ -334,4 +326,11 @@ button.edit:hover {
 .search-view,
 .settings-view {
     padding-top: 12px;
+}
+
+.empty-state {
+    color: var(--text-subtle);
+    font-size: 13px;
+    margin-top: 16px;
+    text-align: center;
 }
