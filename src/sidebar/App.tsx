@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 import { RootData, Settings, Bookmark } from '../shared/types';
 import { BrowserStorageProvider } from "../shared/storage/browser";
 import { createStorageProvider } from "../shared/storage";
@@ -13,6 +14,7 @@ type View = 'bookmarks' | 'settings';
 const bootstrapProvider = new BrowserStorageProvider();
 
 export function App() {
+    const { t } = useTranslation();
     const [view, setView] = useState<View>('bookmarks');
     const [rootData, setRootData] = useState<RootData | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -162,18 +164,18 @@ export function App() {
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return <div>{t('app.error', { message: error })}</div>;
     }
 
     if (!rootData) {
-        return <div>Loading...</div>;
+        return <div>{t('app.loading')}</div>;
     }
 
     return (
         <div className="app">
             <nav>
-                <button className={view === 'bookmarks' ? 'active' : ''} onClick={() => setView('bookmarks')}>Bookmarks</button>
-                <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>Settings</button>
+                <button className={view === 'bookmarks' ? 'active' : ''} onClick={() => setView('bookmarks')}>{t('nav.bookmarks')}</button>
+                <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>{t('nav.settings')}</button>
             </nav>
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={rootData.settings.openInNewTab ?? true} />}

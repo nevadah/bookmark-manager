@@ -1,4 +1,5 @@
 import { useState, FormEvent, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { Settings, AIProviderID, StorageBackend } from '../shared/types';
 import { saveFileHandle, getFileHandle } from "../shared/storage/file-handle-store";
 
@@ -9,6 +10,7 @@ interface SettingsViewProps {
 }
 
 export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) {
+    const { t } = useTranslation();
     const [aiProvider, setAIProvider] = useState<AIProviderID>(settings.aiProvider);
     const [aiApiKey, setAIApiKey] = useState(settings.aiApiKey);
     const [storageBackend, setStorageBackend] = useState<StorageBackend>(settings.storageBackend);
@@ -21,7 +23,6 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        // build Settings object and call onSave
         const newSettings: Settings = {
             aiProvider,
             aiApiKey,
@@ -70,7 +71,7 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
             <form onSubmit={handleSubmit}>
                 <div>
                     <label>
-                        AI Provider:
+                        {t('settings.aiProvider')}
                         <select value={aiProvider} onChange={(e) => setAIProvider(e.target.value as AIProviderID)}>
                             <option value="anthropic">Anthropic</option>
                             <option value="openai">OpenAI</option>
@@ -81,7 +82,7 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
                 </div>
                 <div>
                     <label>
-                        AI API Key:
+                        {t('settings.aiApiKey')}
                         <input type="password" value={aiApiKey} onChange={(e) => setAIApiKey(e.target.value)} />
                     </label>
                 </div>
@@ -89,13 +90,13 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
                     <>
                         <div>
                             <label>
-                                Azure Endpoint:
+                                {t('settings.azureEndpoint')}
                                 <input type="text" value={azureEndpoint} onChange={(e) => setAzureEndpoint(e.target.value)} />
                             </label>
                         </div>
                         <div>
                             <label>
-                                Azure Deployment:
+                                {t('settings.azureDeployment')}
                                 <input type="text" value={azureDeployment} onChange={(e) => setAzureDeployment(e.target.value)} />
                             </label>
                         </div>
@@ -104,24 +105,24 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
                 {aiProvider === 'openrouter' && (
                     <div>
                         <label>
-                            OpenRouter Model:
+                            {t('settings.openRouterModel')}
                             <input type="text" value={openRouterModel} onChange={(e) => setOpenRouterModel(e.target.value)} />
                         </label>
                     </div>
                 )}
                 <div>
                     <label>
-                        Storage Backend:
+                        {t('settings.storageBackend')}
                         <select value={storageBackend} onChange={(e) => setStorageBackend(e.target.value as StorageBackend)}>
-                            <option value="browser">Browser</option>
-                            <option value="file">File</option>
+                            <option value="browser">{t('settings.storageBrowser')}</option>
+                            <option value="file">{t('settings.storageFile')}</option>
                         </select>
                     </label>
                 </div>
                 {storageBackend === 'file' && (
                     <div>
-                        <button type="button" onClick={handleSelectFile}>Select File...</button>
-                        {fileHandleName && <span>Selected File: {fileHandleName}</span>}
+                        <button type="button" onClick={handleSelectFile}>{t('settings.selectFile')}</button>
+                        {fileHandleName && <span>{t('settings.selectedFile', { name: fileHandleName })}</span>}
                     </div>
                 )}
                 <label className="checkbox-label">
@@ -130,15 +131,19 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
                         checked={openInNewTab}
                         onChange={(e) => onSave({ ...settings, openInNewTab: e.target.checked })}
                     />
-                    Open bookmarks in new tab
+                    {t('settings.openInNewTab')}
                 </label>
-                <button type="submit" disabled={storageBackend === 'file' && !fileHandleName}>Save Settings</button>
+                <button type="submit" disabled={storageBackend === 'file' && !fileHandleName}>{t('settings.saveSettings')}</button>
             </form>
             <div className="import-section">
-                <button type="button" onClick={handleImport}>Import from Browser</button>
+                <button type="button" onClick={handleImport}>{t('settings.importFromBrowser')}</button>
                 {importResult && (
-                    <p>Imported {importResult.imported} bookmark{importResult.imported !== 1 ? 's' : ''}
-                    {importResult.skipped > 0 ? ` (${importResult.skipped} skipped as duplicates)` : ''}.</p>
+                    <p>
+                        {importResult.skipped > 0
+                            ? t('settings.importResultWithSkipped', { count: importResult.imported, skipped: importResult.skipped })
+                            : t('settings.importResult', { count: importResult.imported })
+                        }
+                    </p>
                 )}
             </div>
         </div>

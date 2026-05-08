@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Bookmark } from "../shared/types";
 import { BookmarkLeaf } from "./BookmarkLeaf";
 
@@ -45,6 +46,7 @@ function buildTagTree(bookmarks: Bookmark[]): Map<string, TagNode> {
 }
 
 export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, openInNewTab }: BookmarksViewProps) {
+    const { t } = useTranslation();
     const [expandSignal, setExpandSignal] = useState<{ expanded: boolean, version: number } | null>(null);
     const [filterQuery, setFilterQuery] = useState('');
 
@@ -84,8 +86,8 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
     if (bookmarks.length === 0) {
         return (
             <div>
-                <button onClick={handleSaveCurrentPage}>Save Current Page</button>
-                <p className="empty-state">No bookmarks yet. Save a page to get started.</p>
+                <button onClick={handleSaveCurrentPage}>{t('bookmarksView.saveCurrentPage')}</button>
+                <p className="empty-state">{t('bookmarksView.emptyState')}</p>
             </div>
         );
     }
@@ -93,21 +95,21 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
     return (
         <div>
             <div className="bookmarks-toolbar">
-                <button className="icon-btn" onClick={handleSaveCurrentPage} data-tooltip="Save Current Page">
+                <button className="icon-btn" onClick={handleSaveCurrentPage} data-tooltip={t('bookmarksView.saveCurrentPage')}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v12l-5-2.5L3 14V2z"/>
                     </svg>
                 </button>
                 {tree.size > 0 && (
                     <>
-                        <button className="icon-btn" onClick={() => setExpandSignal(s => ({ expanded: true, version: (s?.version ?? 0) + 1 }))} data-tooltip="Expand All">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <button className="icon-btn" onClick={() => setExpandSignal(s => ({ expanded: true, version: (s?.version ?? 0) + 1 }))} data-tooltip={t('bookmarksView.expandAll')}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="4,3 8,7 12,3"/>
                                 <polyline points="4,8 8,12 12,8"/>
                             </svg>
                         </button>
-                        <button className="icon-btn" onClick={() => setExpandSignal(s => ({ expanded: false, version: (s?.version ?? 0) + 1 }))} data-tooltip="Collapse All">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <button className="icon-btn" onClick={() => setExpandSignal(s => ({ expanded: false, version: (s?.version ?? 0) + 1 }))} data-tooltip={t('bookmarksView.collapseAll')}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="4,8 8,4 12,8"/>
                                 <polyline points="4,13 8,9 12,13"/>
                             </svg>
@@ -116,13 +118,13 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
                 )}
                 <input
                     type="search"
-                    placeholder="Search bookmarks..."
+                    placeholder={t('bookmarksView.filterPlaceholder')}
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
                 />
             </div>
             {filterQuery.trim() && filtered.length === 0
-                ? <p className="empty-state">No bookmarks match your search.</p>
+                ? <p className="empty-state">{t('bookmarksView.noResults')}</p>
                 :
                 <ul className="tag-tree">
                     {Array.from(tree.values()).map((node) => (
@@ -130,7 +132,7 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
                     ))}
                     {untagged.length > 0 && (
                         <li className="tree-node">
-                            <span className="tree-label">Untagged</span>
+                            <span className="tree-label">{t('bookmarksView.untagged')}</span>
                             <ul>
                                 {untagged.map((bookmark) => (
                                     <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} openInNewTab={openInNewTab} />

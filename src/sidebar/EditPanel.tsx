@@ -1,4 +1,5 @@
 import { useState, useEffect, KeyboardEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import { Bookmark } from "../shared/types";
 
 interface EditPanelProps {
@@ -9,6 +10,7 @@ interface EditPanelProps {
 }
 
 export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPanelProps) {
+    const { t } = useTranslation();
     const [title, setTitle] = useState(bookmark.title);
     const [url, setUrl] = useState(bookmark.url);
     const [tagInput, setTagInput] = useState('');
@@ -45,7 +47,7 @@ export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPa
     }
 
     function handleRemoveTag(tag: string) {
-        onUpdate({ ...bookmark, tags: bookmark.tags.filter((t) => t !== tag), userModifiedTags: true });
+        onUpdate({ ...bookmark, tags: bookmark.tags.filter((existingTag) => existingTag !== tag), userModifiedTags: true });
     }
 
     async function handleSuggestTags() {
@@ -64,14 +66,14 @@ export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPa
     return (
         <div className="edit-panel">
             <div className="edit-panel-header">
-                <span>Edit Bookmark</span>
+                <span>{t('editPanel.heading')}</span>
                 <button type="button" className="delete" onClick={onClose}>
                     ✕
                 </button>
             </div>
             <div className="edit-panel-body">
                 <label>
-                    Title
+                    {t('editPanel.titleLabel')}
                     <input
                         type="text"
                         value={title}
@@ -80,7 +82,7 @@ export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPa
                     />
                 </label>
                 <label>
-                    URL
+                    {t('editPanel.urlLabel')}
                     <input
                         type="text"
                         value={url}
@@ -103,7 +105,7 @@ export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPa
                     ))}
                     <input
                         type="text"
-                        placeholder="Add tag..."
+                        placeholder={t('editPanel.addTagPlaceholder')}
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={handleTagKeyDown}
@@ -111,7 +113,7 @@ export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPa
                 </div>
                 {onSuggestTags && (
                     <button type="button" onClick={handleSuggestTags} disabled={suggesting}>
-                        {suggesting ? 'Suggesting...' : 'Suggest Tags'}
+                        {suggesting ? t('editPanel.suggesting') : t('editPanel.suggestTags')}
                     </button>
                 )}
             </div>
