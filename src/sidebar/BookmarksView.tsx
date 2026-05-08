@@ -77,13 +77,15 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit }: 
 
     return (
         <div>
-            <button onClick={handleSaveCurrentPage}>Save Current Page</button>
-            {tree.size > 0 && (
-                <>
-                    <button onClick={() => setExpandSignal(s => ({ expanded: true, version: (s?.version ?? 0) + 1 }))}>Expand All</button>
-                    <button onClick={() => setExpandSignal(s => ({ expanded: false, version: (s?.version ?? 0) + 1 }))}>Collapse All</button>
-                </>
-            )}
+            <div className="bookmarks-toolbar">
+                <button onClick={handleSaveCurrentPage}>Save Current Page</button>
+                {tree.size > 0 && (
+                    <>
+                        <button onClick={() => setExpandSignal(s => ({ expanded: true, version: (s?.version ?? 0) + 1 }))}>Expand All</button>
+                        <button onClick={() => setExpandSignal(s => ({ expanded: false, version: (s?.version ?? 0) + 1 }))}>Collapse All</button>
+                    </>
+                )}
+            </div>
             <ul className="tag-tree">
                 {Array.from(tree.values()).map((node) => (
                     <TagTreeNode key={node.fullPath} node={node} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} expandSignal={expandSignal} />
