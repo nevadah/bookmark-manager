@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build -w @bookmark-manager/extension
+
+      - name: Package Chrome extension
+        run: cd packages/extension/dist && zip -r ../chrome-extension.zip .
+
+      - run: npm run build:firefox -w @bookmark-manager/extension
+
+      - name: Package Firefox extension
+        run: cd packages/extension/dist-firefox && zip -r ../firefox-extension.xpi .
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            packages/extension/chrome-extension.zip \
+            packages/extension/firefox-extension.xpi \
+            --title "${{ github.ref_name }}" \
+            --generate-notes
