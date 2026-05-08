@@ -20,6 +20,8 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
     const [fileHandleName, setFileHandleName] = useState<string | null>(null);
     const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
     const openInNewTab = settings.openInNewTab ?? true;
+    const fileSystemSupported = typeof window.showSaveFilePicker === 'function';
+
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -115,7 +117,7 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
                         {t('settings.storageBackend')}
                         <select value={storageBackend} onChange={(e) => setStorageBackend(e.target.value as StorageBackend)}>
                             <option value="browser">{t('settings.storageBrowser')}</option>
-                            <option value="file">{t('settings.storageFile')}</option>
+                            {fileSystemSupported && <option value="file">{t('settings.storageFile')}</option>}
                         </select>
                     </label>
                 </div>
