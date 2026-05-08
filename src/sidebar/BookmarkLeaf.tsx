@@ -29,15 +29,6 @@ export function BookmarkLeaf({ bookmark, onUpdate: _onUpdate, onDelete, onEdit }
                     ✎
                 </button>
             </div>
-            {bookmark.tags.length > 0 && (
-                <div className="tags">
-                    {bookmark.tags.map((tag) => (
-                        <span key={tag} className="tag">
-                            {tag}
-                        </span>
-                    ))}
-                </div>
-            )}
         </li>
     );
 }
