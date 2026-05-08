@@ -1,4 +1,4 @@
-import { Bookmark } from "../shared/types";
+import { Bookmark } from "@bookmark-manager/shared";
 
 interface BookmarkLeafProps {
     bookmark: Bookmark;

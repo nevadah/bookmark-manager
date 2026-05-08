@@ -1,12 +1,12 @@
 import { AIProvider } from "./types";
 import { callOpenAICompatible } from "./openai-compatible";
-import { TAG_SUGGESTION_PROMPT } from "./prompts";
+import { TAG_SUGGESTION_PROMPT } from "@bookmark-manager/shared";
 
-export class OpenRouterProvider implements AIProvider {
-    readonly id = 'openrouter';
-    readonly name = 'OpenRouter';
+export class AzureOpenAIProvider implements AIProvider {
+    readonly id = 'azure-openai';
+    readonly name = 'Azure OpenAI';
 
-    constructor(private readonly apiKey: string, private readonly model: string) {
+    constructor(private readonly apiKey: string, private readonly endpoint: string, private readonly deployment: string) {
     }
 
     async suggestTags(
@@ -21,9 +21,9 @@ export class OpenRouterProvider implements AIProvider {
             Description: ${description}
             Existing tags: ${existingTags.join(', ')}`;
         return await callOpenAICompatible(
-            'https://openrouter.ai/api/v1/chat/completions',
-            { 'Authorization': `Bearer ${this.apiKey}` },
-            this.model,
+            `${this.endpoint}/openai/deployments/${this.deployment}/chat/completions?api-version=2024-02-01`,
+            { 'api-key': this.apiKey },
+            this.deployment,
             TAG_SUGGESTION_PROMPT,
             promptString
         );
@@ -34,6 +34,6 @@ export class OpenRouterProvider implements AIProvider {
         _title: string,
         _content: string
     ): Promise<string> {
-        throw new Error('Summarization not implemented for OpenRouter provider yet');
+        throw new Error('Summarization not implemented for Azure OpenAI provider yet');
     }
 }

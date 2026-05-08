@@ -1,34 +1,8 @@
 {
   "name": "bookmark-manager",
-  "version": "0.1.0",
   "private": true,
-  "type": "module",
+  "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "vite build",
-    "build:firefox": "vite build --mode firefox",
-    "lint": "eslint src",
-    "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run build && npm run build:firefox"
-  },
-  "dependencies": {
-    "i18next": "^26.0.10",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-i18next": "^17.0.7",
-    "uuid": "^10.0.0"
-  },
-  "devDependencies": {
-    "@types/chrome": "^0.0.287",
-    "@types/node": "^25.6.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.18.0",
-    "@typescript-eslint/parser": "^8.18.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "^9.16.0",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "check": "npm run check -w @bookmark-manager/extension"
   }
 }

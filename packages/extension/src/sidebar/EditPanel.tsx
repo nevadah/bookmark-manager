@@ -1,6 +1,6 @@
 import { useState, useEffect, KeyboardEvent } from "react";
 import { useTranslation } from 'react-i18next';
-import { Bookmark } from "../shared/types";
+import { Bookmark } from "@bookmark-manager/shared";
 
 interface EditPanelProps {
     bookmark: Bookmark;

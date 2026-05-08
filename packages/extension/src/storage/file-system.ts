@@ -1,4 +1,4 @@
-import { RootData } from '../types';
+import { RootData } from '@bookmark-manager/shared';
 import { StorageProvider } from './types';
 import { getFileHandle } from './file-handle-store';
 

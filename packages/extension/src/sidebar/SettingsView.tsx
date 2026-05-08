@@ -1,7 +1,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
-import { Settings, AIProviderID, StorageBackend } from '../shared/types';
-import { saveFileHandle, getFileHandle } from "../shared/storage/file-handle-store";
+import { Settings, AIProviderID, StorageBackend } from '@bookmark-manager/shared';
+import { saveFileHandle, getFileHandle } from "../storage/file-handle-store";
 
 interface SettingsViewProps {
     settings: Settings;

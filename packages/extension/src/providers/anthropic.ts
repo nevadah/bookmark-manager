@@ -1,5 +1,5 @@
 import { AIProvider } from "./types";
-import { TAG_SUGGESTION_PROMPT } from "./prompts";
+import { TAG_SUGGESTION_PROMPT } from "@bookmark-manager/shared";
 
 export class AnthropicProvider implements AIProvider {
     readonly id = 'anthropic';
