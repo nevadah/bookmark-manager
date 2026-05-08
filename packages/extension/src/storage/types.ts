@@ -1,4 +1,4 @@
-import { RootData } from "../types";
+import { RootData } from "@bookmark-manager/shared";
 
 export interface StorageProvider {
   readData(): Promise<RootData>;

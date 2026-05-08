@@ -1,5 +1,5 @@
 import { StorageProvider } from "./types";
-import { Settings } from "../types";
+import { Settings } from "@bookmark-manager/shared";
 import { FileSystemStorageProvider } from "./file-system";
 import { BrowserStorageProvider } from "./browser";
 

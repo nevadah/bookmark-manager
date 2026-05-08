@@ -1,4 +1,4 @@
-import { AIProviderID } from '../types';
+import { AIProviderID } from '@bookmark-manager/shared';
 
 export interface AIProvider {
   readonly name: string;

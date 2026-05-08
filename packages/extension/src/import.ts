@@ -1,4 +1,4 @@
-import { Bookmark } from './types';
+import { Bookmark } from '@bookmark-manager/shared';
 
 function walk(
     nodes: chrome.bookmarks.BookmarkTreeNode[],

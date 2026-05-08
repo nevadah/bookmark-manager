@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { Bookmark } from "../shared/types";
+import { Bookmark } from "@bookmark-manager/shared";
 import { BookmarkLeaf } from "./BookmarkLeaf";
 
 interface TagNode {

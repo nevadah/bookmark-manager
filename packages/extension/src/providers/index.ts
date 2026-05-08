@@ -1,4 +1,4 @@
-import { Settings } from "../types";
+import { Settings } from "@bookmark-manager/shared";
 import { AIProvider } from "./types";
 import { AnthropicProvider } from "./anthropic";
 import { OpenAIProvider } from "./openai";

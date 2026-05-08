@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { RootData, Settings, Bookmark } from '../shared/types';
-import { BrowserStorageProvider } from "../shared/storage/browser";
-import { createStorageProvider } from "../shared/storage";
-import { createProvider } from "../shared/providers";
+import { RootData, Settings, Bookmark } from '@bookmark-manager/shared';
+import { BrowserStorageProvider } from "../storage/browser";
+import { createStorageProvider } from "../storage";
+import { createProvider } from "../providers";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
 import { EditPanel } from "./EditPanel";
-import { importBrowserBookmarks } from "../shared/import";
+import { importBrowserBookmarks } from "../import";
 
 type View = 'bookmarks' | 'settings';
 
