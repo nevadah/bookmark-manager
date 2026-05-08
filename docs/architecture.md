@@ -65,6 +65,8 @@ Two local implementations ship currently. The user chooses during setup; the cho
 
 Reads and writes a user-specified local JSON file using the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API).
 
+**Browser support:** Chromium only. Firefox does not implement `showSaveFilePicker`, so the file storage option is hidden in the settings UI when the API is unavailable (`typeof window.showSaveFilePicker === 'function'`).
+
 **Onboarding flow:**
 1. On first run, the sidebar detects no file handle is stored.
 2. User is shown a setup screen prompting them to select or create a file.
