@@ -5,9 +5,10 @@ interface BookmarkLeafProps {
     onUpdate: (bookmark: Bookmark) => void;
     onDelete: (id: string) => void;
     onEdit: (bookmark: Bookmark) => void;
+    openInNewTab: boolean;
 }
 
-export function BookmarkLeaf({ bookmark, onUpdate: _onUpdate, onDelete, onEdit }: BookmarkLeafProps) {
+export function BookmarkLeaf({ bookmark, onUpdate: _onUpdate, onDelete, onEdit, openInNewTab }: BookmarkLeafProps) {
     return (
         <li className="bookmark-leaf">
             <div className="bookmark-header">
@@ -19,7 +20,17 @@ export function BookmarkLeaf({ bookmark, onUpdate: _onUpdate, onDelete, onEdit }
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                 )}
-                <a href={bookmark.url} target="_blank" rel="noopener noreferrer">
+                <a
+                    href={bookmark.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                        if (!openInNewTab) {
+                            e.preventDefault();
+                            chrome.tabs.update({ url: bookmark.url });
+                        }
+                    }}
+                >
                     {bookmark.title}
                 </a>
                 <button type="button" className="delete" onClick={() => onDelete(bookmark.id)}>

@@ -236,6 +236,12 @@ button.edit:hover {
     color: var(--panel-label);
 }
 
+.settings-view .checkbox-label {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
 .bookmarks-toolbar {
     display: flex;
     align-items: center;

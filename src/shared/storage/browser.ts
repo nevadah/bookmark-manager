@@ -16,6 +16,7 @@ export class BrowserStorageProvider implements StorageProvider {
                 aiProvider: 'anthropic',
                 aiApiKey: '',
                 storageBackend: 'browser',
+                openInNewTab: true,
             },
             bookmarks: [],
         };
