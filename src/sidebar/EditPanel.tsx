@@ -5,12 +5,14 @@ interface EditPanelProps {
     bookmark: Bookmark;
     onUpdate: (bookmark: Bookmark) => void;
     onClose: () => void;
+    onSuggestTags?: (url:string, title: string, description: string, tags: string[]) => Promise<string[]>;
 }
 
-export function EditPanel({ bookmark, onUpdate, onClose }: EditPanelProps) {
+export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPanelProps) {
     const [title, setTitle] = useState(bookmark.title);
     const [url, setUrl] = useState(bookmark.url);
     const [tagInput, setTagInput] = useState('');
+    const [suggesting, setSuggesting] = useState(false);
 
     useEffect(() => {
         setTitle(bookmark.title);
@@ -44,6 +46,19 @@ export function EditPanel({ bookmark, onUpdate, onClose }: EditPanelProps) {
 
     function handleRemoveTag(tag: string) {
         onUpdate({ ...bookmark, tags: bookmark.tags.filter((t) => t !== tag), userModifiedTags: true });
+    }
+
+    async function handleSuggestTags() {
+        setSuggesting(true);
+        try {
+            const suggestedTags = await onSuggestTags!(url, title, bookmark.description, bookmark.tags);
+            if (suggestedTags.length > 0) {
+                const mergedTags = new Set([...bookmark.tags, ...suggestedTags]);
+                onUpdate({ ...bookmark, tags: Array.from(mergedTags), aiSuggestedTags: suggestedTags, userModifiedTags: true });
+            }
+        } finally {
+            setSuggesting(false);
+        }
     }
 
     return (
@@ -94,6 +109,11 @@ export function EditPanel({ bookmark, onUpdate, onClose }: EditPanelProps) {
                         onKeyDown={handleTagKeyDown}
                     />
                 </div>
+                {onSuggestTags && (
+                    <button type="button" onClick={handleSuggestTags} disabled={suggesting}>
+                        {suggesting ? 'Suggesting...' : 'Suggest Tags'}
+                    </button>
+                )}
             </div>
         </div>
     );
