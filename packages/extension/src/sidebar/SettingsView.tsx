@@ -5,14 +5,15 @@ import { saveFileHandle, getFileHandle } from "../storage/file-handle-store";
 
 interface SettingsViewProps {
     settings: Settings;
-    onSave: (settings: Settings) => void;
+    apiKey: string;
+    onSave: (settings: Settings, apiKey: string) => void;
     onImport: () => Promise<{ imported: number; skipped: number }>;
 }
 
-export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) {
+export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsViewProps) {
     const { t } = useTranslation();
     const [aiProvider, setAIProvider] = useState<AIProviderID>(settings.aiProvider);
-    const [aiApiKey, setAIApiKey] = useState(settings.aiApiKey);
+    const [aiApiKey, setAIApiKey] = useState(apiKey);
     const [storageBackend, setStorageBackend] = useState<StorageBackend>(settings.storageBackend);
     const [azureEndpoint, setAzureEndpoint] = useState(settings.azureEndpoint ?? '');
     const [azureDeployment, setAzureDeployment] = useState(settings.azureDeployment ?? '');
@@ -22,14 +23,12 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
     const openInNewTab = settings.openInNewTab ?? true;
     const fileSystemSupported = typeof window.showSaveFilePicker === 'function';
 
-
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const newSettings: Settings = {
             aiProvider,
-            aiApiKey,
             storageBackend,
-            openInNewTab
+            openInNewTab,
         };
         if (aiProvider === 'azure-openai') {
             newSettings.azureEndpoint = azureEndpoint;
@@ -37,7 +36,7 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
         } else if (aiProvider === 'openrouter') {
             newSettings.openRouterModel = openRouterModel;
         }
-        onSave(newSettings);
+        onSave(newSettings, aiApiKey);
     }
 
     async function handleSelectFile() {
@@ -131,7 +130,7 @@ export function SettingsView({ settings, onSave, onImport }: SettingsViewProps) 
                     <input
                         type="checkbox"
                         checked={openInNewTab}
-                        onChange={(e) => onSave({ ...settings, openInNewTab: e.target.checked })}
+                        onChange={(e) => onSave({ ...settings, openInNewTab: e.target.checked }, aiApiKey)}
                     />
                     {t('settings.openInNewTab')}
                 </label>

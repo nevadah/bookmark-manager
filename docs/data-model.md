@@ -13,11 +13,6 @@ The entire data store is a single JSON file the user controls.
 ```json
 {
   "version": "1.0",
-  "settings": {
-    "aiProvider": "anthropic",
-    "aiApiKey": "sk-ant-...",
-    "storageBackend": "file"
-  },
   "bookmarks": []
 }
 ```
@@ -25,19 +20,19 @@ The entire data store is a single JSON file the user controls.
 | Field | Type | Notes |
 |---|---|---|
 | `version` | string | Schema version. Checked on load to trigger migrations. Current: `"1.0"` |
-| `settings` | object | User configuration. Stored in the same file for portability |
 | `bookmarks` | array | Array of bookmark objects |
 
 ### Settings fields
 
+All settings are stored in chrome.storage.local under the key settings, separate from the bookmarks file.
+
 | Field | Type | Notes |
 |---|---|---|
 | `aiProvider` | `"anthropic" \| "openai" \| "azure-openai" \| "openrouter"` | Selected AI provider |
-| `aiApiKey` | string | User's API key for the selected provider. Stored locally only — never transmitted except to the chosen provider |
 | `storageBackend` | `"file" \| "browser"` | Which storage backend to use |
 | `openInNewTab` | boolean | Whether clicking a bookmark opens it in a new tab (default: `true`) |
 
-Azure OpenAI additionally requires `azureEndpoint` and `azureDeployment` in settings. OpenRouter additionally requires `openRouterModel`.
+The AI API key is stored separately in `chrome.storage.local` (never in the bookmarks file) to avoid exposing credentials in plain text when file storage is used. Azure OpenAI additionally requires `azureEndpoint` and `azureDeployment`. OpenRouter additionally requires `openRouterModel`.
 
 ### Bookmark object
 

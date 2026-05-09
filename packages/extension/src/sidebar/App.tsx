@@ -1,35 +1,51 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { RootData, Settings, Bookmark } from '@bookmark-manager/shared';
-import { BrowserStorageProvider } from "../storage/browser";
 import { createStorageProvider } from "../storage";
+import { getApiKey, saveApiKey } from "../storage/credentials";
 import { createProvider } from "../providers";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
 import { EditPanel } from "./EditPanel";
 import { importBrowserBookmarks } from "../import";
+import { getSettings, saveSettings } from "../storage/settings";
 
 type View = 'bookmarks' | 'settings';
-
-const bootstrapProvider = new BrowserStorageProvider();
 
 export function App() {
     const { t } = useTranslation();
     const [view, setView] = useState<View>('bookmarks');
     const [rootData, setRootData] = useState<RootData | null>(null);
+    const [apiKey, setApiKey] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
+    const [settings, setSettings] = useState<Settings | null>(null);
     const rootDataRef = useRef<RootData | null>(null);
+    const settingsRef = useRef<Settings | null>(null);
+
+    useEffect(() => {
+        async function bootstrap() {
+            try {
+                const [loadedSettings, key] = await Promise.all([getSettings(), getApiKey()]);
+                const data = await createStorageProvider(loadedSettings).readData();
+                setSettings(loadedSettings);
+                setRootData(data);
+                setApiKey(key);
+            } catch (err) {
+                setError('Failed to load data: ' + (err instanceof Error ? err.message : String(err)));
+            }
+        }
+        bootstrap();
+    }, []);
 
     useEffect(() => {
         rootDataRef.current = rootData;
     }, [rootData]);
 
     useEffect(() => {
-        bootstrapProvider.readData().then(setRootData).catch((err) => {
-            setError('Failed to load data: ' + err.message);
-        });
-    }, []);
+        settingsRef.current = settings;
+    }, [settings]);
+
 
     useEffect(() => {
         async function handleTabUpdate(_tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
@@ -42,7 +58,7 @@ export function App() {
             const bookmarks = current.bookmarks.map((b) => b.id === updated.id ? updated : b);
             const updatedData = { ...current, bookmarks };
             try {
-                await createStorageProvider(current.settings).writeData(updatedData);
+                await createStorageProvider(settingsRef.current!).writeData(updatedData);
                 setRootData(updatedData);
             } catch {
                 // silently fail — favicon is non-critical
@@ -52,27 +68,35 @@ export function App() {
         return () => chrome.tabs.onUpdated.removeListener(handleTabUpdate);
     }, []);
 
+    async function handleSaveSettings(newSettings: Settings, newApiKey: string) {
+        const base = rootData ?? { version: '1.0' as const, bookmarks: [] };
+        let mergedBookmarks = base.bookmarks;
 
-    async function handleSaveSettings(settings: Settings) {
-        const base = rootData ?? { version: '1.0' as const, settings, bookmarks: [] };
-        let updated: RootData = { ...base, settings };
-
-        if (settings.storageBackend === 'file') {
+        if (newSettings.storageBackend === 'file') {
             try {
-                const existing = await createStorageProvider(settings).readData();
+                const existing = await createStorageProvider(newSettings).readData();
                 if (existing.bookmarks.length > 0) {
                     const fileUrls = new Set(existing.bookmarks.map((b) => b.url));
-                    const fromBrowser = updated.bookmarks.filter((b) => !fileUrls.has(b.url));
-                    updated = { ...updated, bookmarks: [...existing.bookmarks, ...fromBrowser] };
+                    const fromBrowser = base.bookmarks.filter((b) => !fileUrls.has(b.url));
+                    mergedBookmarks = [...existing.bookmarks, ...fromBrowser];
                 }
             } catch {
-                // file is new or empty — no merge needed
+                // file is new or empty
             }
         }
 
+        const dataToWrite: RootData = {
+            version: base.version,
+            bookmarks: mergedBookmarks,
+        };
+
         try {
-            await createStorageProvider(settings).writeData(updated);
-            setRootData(updated);
+            await createStorageProvider(newSettings).writeData(dataToWrite);
+            await saveSettings(newSettings);
+            await saveApiKey(newApiKey);
+            setRootData(dataToWrite);
+            setSettings(newSettings);
+            setApiKey(newApiKey);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save settings');
         }
@@ -84,16 +108,15 @@ export function App() {
             bookmarks: [...rootData!.bookmarks, bookmark]
         };
         try {
-            await createStorageProvider(rootData!.settings).writeData(updated);
+            await createStorageProvider(settingsRef.current!).writeData(updated);
             setRootData(updated);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save bookmark');
         }
 
-        // AI tagging in the background. Don't await, don't block
-        if (rootData!.settings.aiApiKey) {
+        if (apiKey) {
             try {
-                const provider = createProvider(rootData!.settings);
+                const provider = createProvider(settingsRef.current!, apiKey);
                 const suggestedTags = await provider.suggestTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
                 if (suggestedTags.length > 0) {
                     const withTags: Bookmark = {
@@ -106,11 +129,11 @@ export function App() {
                         ...current,
                         bookmarks: current.bookmarks.map((b) => b.id === withTags.id ? withTags : b)
                     };
-                    await createStorageProvider(current.settings).writeData(withAiTags);
+                    await createStorageProvider(settingsRef.current!).writeData(withAiTags);
                     setRootData(withAiTags);
                 }
             } catch {
-                // Silently fail on AI errors. Bookmark is already saved, just without AI tags
+                // Silently fail on AI errors
             }
         }
     }
@@ -119,7 +142,7 @@ export function App() {
         const bookmarks = rootData!.bookmarks.map((b) => b.id === updated.id ? updated : b);
         const updatedData = { ...rootData!, bookmarks };
         try {
-            await createStorageProvider(rootData!.settings).writeData(updatedData);
+            await createStorageProvider(settingsRef.current!).writeData(updatedData);
             setRootData(updatedData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update bookmark');
@@ -130,7 +153,7 @@ export function App() {
         const bookmarks = rootData!.bookmarks.filter((b) => b.id !== id);
         const updatedData = { ...rootData!, bookmarks };
         try {
-            await createStorageProvider(rootData!.settings).writeData(updatedData);
+            await createStorageProvider(settingsRef.current!).writeData(updatedData);
             setRootData(updatedData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete bookmark');
@@ -139,7 +162,7 @@ export function App() {
 
     async function fetchSuggestedTags(url: string, title: string, description: string, tags: string[]): Promise<string[]> {
         try {
-            const provider = createProvider(rootData!.settings);
+            const provider = createProvider(settingsRef.current!, apiKey);
             return await provider.suggestTags(url, title, description, tags);
         } catch {
             return [];
@@ -157,7 +180,7 @@ export function App() {
                 ...rootData!,
                 bookmarks: [...rootData!.bookmarks, ...newBookmarks]
             };
-            await createStorageProvider(rootData!.settings).writeData(updatedData);
+            await createStorageProvider(settingsRef.current!).writeData(updatedData);
             setRootData(updatedData);
         }
         return { imported: newBookmarks.length, skipped };
@@ -167,7 +190,7 @@ export function App() {
         return <div>{t('app.error', { message: error })}</div>;
     }
 
-    if (!rootData) {
+    if (!rootData || !settings) {
         return <div>{t('app.loading')}</div>;
     }
 
@@ -178,8 +201,8 @@ export function App() {
                 <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>{t('nav.settings')}</button>
             </nav>
             <main>
-                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={rootData.settings.openInNewTab ?? true} />}
-                {view === 'settings' && <SettingsView settings={rootData.settings} onSave={handleSaveSettings} onImport={handleImport} />}
+                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={settings!.openInNewTab ?? true} />}
+                {view === 'settings' && <SettingsView settings={settings!} apiKey={apiKey} onSave={handleSaveSettings} onImport={handleImport} />}
             </main>
             {editingBookmark && (
                 <EditPanel
@@ -189,7 +212,7 @@ export function App() {
                         setEditingBookmark(updated);
                     }}
                     onClose={() => setEditingBookmark(null)}
-                    onSuggestTags={rootData.settings.aiApiKey ? fetchSuggestedTags : undefined}
+                    onSuggestTags={apiKey ? fetchSuggestedTags : undefined}
                 />
             )}
         </div>
