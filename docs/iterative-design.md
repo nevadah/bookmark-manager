@@ -86,6 +86,22 @@ The fix separated concerns cleanly: all settings live in `chrome.storage.local` 
 
 ---
 
+### Right-click context menu added to bookmarks (PR #56)
+
+The original bookmark list had small inline Edit and Delete icon buttons on each item. This worked, but reading back through the iterative design history surfaced the question of whether direct bookmark actions deserved a more natural home.
+
+A right-click context menu was added with the full set of open actions (current tab, new tab, background tab, new window, private window) alongside Edit and Delete. This matches the interaction pattern users already have from their file manager and browser bookmarks bar, and surfaces actions that weren't available at all before (the various open modes).
+
+---
+
+### Tag tree expand/collapse state not persisted (PR #57)
+
+The expand and collapse state of tag tree nodes was stored only in React component state. Switching to the Settings tab and back caused `BookmarksView` to unmount and remount, resetting everything to fully expanded.
+
+Found by using the extension normally — collapsing some branches to reduce noise, then navigating to settings and back. The fix persists expand/collapse state per tag path in `chrome.storage.local`, survives browser restarts, and prunes entries for tag paths that no longer exist when bookmarks change.
+
+---
+
 ## Pushed back on a planned design
 
 ### JWT replaced with server-side sessions (PR #47)
