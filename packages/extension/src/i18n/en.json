@@ -24,6 +24,15 @@
     "suggestTags": "Suggest Tags",
     "suggesting": "Suggesting..."
   },
+  "contextMenu": {
+    "openInCurrentTab": "Open in Current Tab",
+    "openInNewTab": "Open in New Tab",
+    "openInBackgroundTab": "Open in Background Tab",
+    "openInNewWindow": "Open in New Window",
+    "openInPrivateWindow": "Open in Private Window",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
   "settings": {
     "aiProvider": "AI Provider",
     "aiApiKey": "AI API Key",

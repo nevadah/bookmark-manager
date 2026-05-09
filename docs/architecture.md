@@ -101,6 +101,13 @@ dist/
 
 The Firefox build applies `public/manifest.firefox.json` over the Chrome manifest at the end of the build via a Vite `closeBundle` plugin.
 
+### Browser compatibility
+
+| Feature | Chromium | Firefox | Notes |
+|---|---|---|---|
+| File storage backend | Supported | Not supported | Firefox does not implement the File System Access API (`showSaveFilePicker`). The option is hidden in the settings UI via feature detection. |
+| Open in Private Window | Supported | Requires user opt-in | `chrome.windows.create({ incognito: true })` is rejected unless the user has enabled **Allow in Private Windows** for this extension in `about:addons`. The call fails gracefully if permission has not been granted. |
+
 ---
 
 ## Server
