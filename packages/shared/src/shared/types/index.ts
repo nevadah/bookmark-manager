@@ -27,6 +27,5 @@ export interface Bookmark {
 
 export interface RootData {
     version: RootDataVersion;
-    settings: Settings;
     bookmarks: Bookmark[];
 }

@@ -13,11 +13,6 @@ The entire data store is a single JSON file the user controls.
 ```json
 {
   "version": "1.0",
-  "settings": {
-    "aiProvider": "anthropic",
-    "aiApiKey": "sk-ant-...",
-    "storageBackend": "file"
-  },
   "bookmarks": []
 }
 ```
@@ -25,10 +20,11 @@ The entire data store is a single JSON file the user controls.
 | Field | Type | Notes |
 |---|---|---|
 | `version` | string | Schema version. Checked on load to trigger migrations. Current: `"1.0"` |
-| `settings` | object | User configuration. Stored in the same file for portability |
 | `bookmarks` | array | Array of bookmark objects |
 
 ### Settings fields
+
+All settings are stored in chrome.storage.local under the key settings, separate from the bookmarks file.
 
 | Field | Type | Notes |
 |---|---|---|
