@@ -45,7 +45,6 @@
     "selectFile": "Select File...",
     "selectedFile": "Selected File: {{name}}",
     "openInNewTab": "Open bookmarks in new tab",
-    "saveSettings": "Save Settings",
     "importFromBrowser": "Import from Browser",
     "importResult_one": "Imported {{count}} bookmark.",
     "importResult_other": "Imported {{count}} bookmarks.",
