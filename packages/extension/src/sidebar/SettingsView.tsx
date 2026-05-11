@@ -55,6 +55,21 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
         }
     }
 
+    async function handleOpenExistingFile() {
+        try {
+            const [handle] = await window.showOpenFilePicker({
+                types: [{ description: 'JSON Files', accept: {'application/json': ['.json']} }]
+            });
+            const permission = await handle.requestPermission({ mode: 'readwrite' });
+            if (permission !== 'granted') return;
+            await saveFileHandle(handle);
+            setFileHandleName(handle.name);
+            onSave(buildSettings({ storageBackend: 'file' }), aiApiKey);
+        } catch {
+            // user cancelled
+        }
+    }
+
 
     async function handleImport() {
         const result = await onImport();
@@ -73,7 +88,7 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
 
     return (
         <div className="settings-view">
-            <div>
+            <div className="settings-fields">
                 <div>
                     <label>
                         {t('settings.aiProvider')}
@@ -136,8 +151,9 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
                     </label>
                 </div>
                 {storageBackend === 'file' && (
-                    <div>
-                        <button type="button" onClick={handleSelectFile}>{t('settings.selectFile')}</button>
+                    <div className="file-storage-controls">
+                        <button type="button" onClick={handleSelectFile}>{t('settings.newFile')}</button>
+                        <button type="button" onClick={handleOpenExistingFile}>{t('settings.openExistingFile')}</button>
                         {fileHandleName && <span>{t('settings.selectedFile', { name: fileHandleName })}</span>}
                     </div>
                 )}
