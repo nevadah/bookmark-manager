@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { Settings, AIProviderID, StorageBackend } from '@bookmark-manager/shared';
 import { saveFileHandle, getFileHandle } from "../storage/file-handle-store";
@@ -23,20 +23,22 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
     const openInNewTab = settings.openInNewTab ?? true;
     const fileSystemSupported = typeof window.showSaveFilePicker === 'function';
 
-    function handleSubmit(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        const newSettings: Settings = {
-            aiProvider,
-            storageBackend,
-            openInNewTab,
+    function buildSettings(overrides?: Partial<Settings>): Settings {
+        const provider = overrides?.aiProvider ?? aiProvider;
+        const backend = overrides?.storageBackend ?? storageBackend;
+        const s: Settings = {
+            aiProvider: provider,
+            storageBackend: backend,
+            openInNewTab: settings.openInNewTab ?? true
         };
-        if (aiProvider === 'azure-openai') {
-            newSettings.azureEndpoint = azureEndpoint;
-            newSettings.azureDeployment = azureDeployment;
-        } else if (aiProvider === 'openrouter') {
-            newSettings.openRouterModel = openRouterModel;
+        if (provider === 'azure-openai') {
+            s.azureEndpoint = overrides?.azureEndpoint ?? azureEndpoint;
+            s.azureDeployment = overrides?.azureDeployment ?? azureDeployment;
         }
-        onSave(newSettings, aiApiKey);
+        if (provider === 'openrouter') {
+            s.openRouterModel = overrides?.openRouterModel ?? openRouterModel;
+        }
+        return s;
     }
 
     async function handleSelectFile() {
@@ -47,10 +49,12 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
             });
             await saveFileHandle(handle);
             setFileHandleName(handle.name);
+            onSave(buildSettings({ storageBackend: 'file' }), aiApiKey);
         } catch {
-            // user cancelled - do nothing
+            // user cancelled
         }
     }
+
 
     async function handleImport() {
         const result = await onImport();
@@ -69,11 +73,16 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
 
     return (
         <div className="settings-view">
-            <form onSubmit={handleSubmit}>
+            <div>
                 <div>
                     <label>
                         {t('settings.aiProvider')}
-                        <select value={aiProvider} onChange={(e) => setAIProvider(e.target.value as AIProviderID)}>
+                        <select value={aiProvider}
+                            onChange={(e) => {
+                                const p = e.target.value as AIProviderID;
+                                setAIProvider(p);
+                                onSave(buildSettings({ aiProvider: p }), aiApiKey);
+                            }}>
                             <option value="anthropic">Anthropic</option>
                             <option value="openai">OpenAI</option>
                             <option value="azure-openai">Azure OpenAI</option>
@@ -84,7 +93,7 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
                 <div>
                     <label>
                         {t('settings.aiApiKey')}
-                        <input type="password" value={aiApiKey} onChange={(e) => setAIApiKey(e.target.value)} />
+                        <input type="password" value={aiApiKey} onChange={(e) => setAIApiKey(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
                     </label>
                 </div>
                 {aiProvider === 'azure-openai' && (
@@ -92,13 +101,13 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
                         <div>
                             <label>
                                 {t('settings.azureEndpoint')}
-                                <input type="text" value={azureEndpoint} onChange={(e) => setAzureEndpoint(e.target.value)} />
+                                <input type="text" value={azureEndpoint} onChange={(e) => setAzureEndpoint(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
                             </label>
                         </div>
                         <div>
                             <label>
                                 {t('settings.azureDeployment')}
-                                <input type="text" value={azureDeployment} onChange={(e) => setAzureDeployment(e.target.value)} />
+                                <input type="text" value={azureDeployment} onChange={(e) => setAzureDeployment(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
                             </label>
                         </div>
                     </>
@@ -107,14 +116,20 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
                     <div>
                         <label>
                             {t('settings.openRouterModel')}
-                            <input type="text" value={openRouterModel} onChange={(e) => setOpenRouterModel(e.target.value)} />
+                            <input type="text" value={openRouterModel} onChange={(e) => setOpenRouterModel(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
                         </label>
                     </div>
                 )}
                 <div>
                     <label>
                         {t('settings.storageBackend')}
-                        <select value={storageBackend} onChange={(e) => setStorageBackend(e.target.value as StorageBackend)}>
+                        <select value={storageBackend}
+                            onChange={(e) => {
+                                const b = e.target.value as StorageBackend;
+                                setStorageBackend(b);
+                                if (b === 'file' && !fileHandleName) return;
+                                onSave(buildSettings({ storageBackend: b }), aiApiKey);
+                            }}>
                             <option value="browser">{t('settings.storageBrowser')}</option>
                             {fileSystemSupported && <option value="file">{t('settings.storageFile')}</option>}
                         </select>
@@ -134,8 +149,7 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
                     />
                     {t('settings.openInNewTab')}
                 </label>
-                <button type="submit" disabled={storageBackend === 'file' && !fileHandleName}>{t('settings.saveSettings')}</button>
-            </form>
+            </div>
             <div className="import-section">
                 <button type="button" onClick={handleImport}>{t('settings.importFromBrowser')}</button>
                 {importResult && (

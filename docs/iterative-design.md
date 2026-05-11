@@ -102,6 +102,14 @@ Found by using the extension normally — collapsing some branches to reduce noi
 
 ---
 
+### Save Settings button removed in favor of auto-save (PR #58)
+
+The Settings form had an explicit Save Settings button. In practice this caused a recurring "forgot to save" problem — settings would be changed but not take effect until the button was clicked.
+
+Selects now save on change, text inputs save on blur, and the file picker saves immediately after a file is selected. The Save Settings button was removed entirely.
+
+---
+
 ## Pushed back on a planned design
 
 ### JWT replaced with server-side sessions (PR #47)
