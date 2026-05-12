@@ -110,6 +110,14 @@ Selects now save on change, text inputs save on blur, and the file picker saves 
 
 ---
 
+### File storage split into "New File" and "Open Existing File" (PR #59)
+
+The file storage option had a single "Select File..." button backed by `showSaveFilePicker`. When pointing it at an existing bookmarks file, Chrome shows a "Replace?" confirmation before handing back the handle — and by the time the extension calls `readData()`, the file has already been truncated. JSON.parse fails on the empty content, the catch block fires with an empty bookmark list, and that empty list is written back, destroying the file's contents.
+
+Found by testing the intended workflow: create bookmarks in one browser, export to a file, open in a second browser by selecting the same file. The fix splits the action into two buttons: "New File..." continues to use `showSaveFilePicker` for creating a fresh file, while "Open Existing File..." uses `showOpenFilePicker` followed by `requestPermission({ mode: 'readwrite' })`. The open picker never truncates — it reads first, merges, then writes.
+
+---
+
 ## Pushed back on a planned design
 
 ### JWT replaced with server-side sessions (PR #47)
