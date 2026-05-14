@@ -235,7 +235,7 @@ export function SettingsView({ settings, apiKey, onSave, onImport, serverToken, 
                 {storageBackend === 'server' && (
                     <>
                         {serverToken ? (
-                            <div className="server-auth">
+                            <div className="server-auth auth-status">
                                 <p>{t('settings.loggedIn')}</p>
                                 <button type="button" onClick={onLogout}>{t('settings.logout')}</button>
                             </div>
@@ -249,11 +249,13 @@ export function SettingsView({ settings, apiKey, onSave, onImport, serverToken, 
                                         </label>
                                         <label>
                                             {t('settings.password')}
-                                            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} />
+                                            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} minLength={8} maxLength={128}/>
                                         </label>
                                         {authError && <p className="auth-error">{authError}</p>}
-                                        <button type="button" onClick={handleSignIn}>{t('settings.signIn')}</button>
-                                        <button type="button" onClick={() => setAuthMode('signup')}>{t('settings.signUp')}</button>
+                                        <div className="auth-buttons">
+                                            <button type="button" onClick={handleSignIn}>{t('settings.signIn')}</button>
+                                            <button type="button" onClick={() => setAuthMode('signup')}>{t('settings.signUp')}</button>
+                                        </div>
                                     </>
                                 ) : (
                                     <>
@@ -263,15 +265,17 @@ export function SettingsView({ settings, apiKey, onSave, onImport, serverToken, 
                                         </label>
                                         <label>
                                             {t('settings.password')}
-                                            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} />
+                                            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} minLength={8} maxLength={128} />
                                         </label>
                                         <label>
                                             {t('settings.confirmPassword')}
-                                            <input type="password" value={authPasswordConfirm} onChange={(e) => setAuthPasswordConfirm(e.target.value)} />
+                                            <input type="password" value={authPasswordConfirm} onChange={(e) => setAuthPasswordConfirm(e.target.value)} minLength={8} maxLength={128} />
                                         </label>
                                         {authError && <p className="auth-error">{authError}</p>}
-                                        <button type="button" onClick={handleSignUp}>{t('settings.signUp')}</button>
-                                        <button type="button" onClick={() => setAuthMode('signin')}>{t('settings.cancel')}</button>
+                                        <div className="auth-buttons">
+                                            <button type="button" onClick={handleSignUp}>{t('settings.signUp')}</button>
+                                            <button type="button" onClick={() => setAuthMode('signin')}>{t('settings.cancel')}</button>
+                                        </div>
                                     </>
                                 )}
                             </div>

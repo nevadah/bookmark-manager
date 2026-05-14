@@ -126,6 +126,7 @@ a:hover {
 }
 
 input[type="text"],
+input[type="email"],
 input[type="password"],
 input[type="search"] {
     width: 100%;
@@ -456,4 +457,32 @@ button.edit:hover {
 
 .context-menu li.danger {
     color: var(--danger);
+}
+
+.server-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.auth-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin: 0;
+}
+
+.auth-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.auth-status p {
+    margin: 0;
+    font-size: 13px;
 }
