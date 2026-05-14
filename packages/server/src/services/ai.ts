@@ -1,4 +1,4 @@
-import { TAG_SUGGESTION_PROMPT } from '@bookmark-manager/shared';
+const TAG_SUGGESTION_PROMPT = `You are a bookmark tagging assistant. Tags use '/' to indicate hierarchy (e.g. 'tech/web', 'tech/programming', 'news/politics'). Suggest tags for the given bookmark using existing tags where appropriate, and introducing new tags only when nothing in the vocabulary fits. Use up to 2 levels of hierarchy to group by broad category then specific topic. Respond with a JSON array of tag strings only. No explanation.`;
 
 type AIProvider = 'anthropic' | 'openai' | 'azure-openai' | 'openrouter';
 
