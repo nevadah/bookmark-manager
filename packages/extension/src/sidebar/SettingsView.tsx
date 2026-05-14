@@ -154,51 +154,55 @@ export function SettingsView({ settings, apiKey, onSave, onImport, serverToken, 
     return (
         <div className="settings-view">
             <div className="settings-fields">
-                <div>
-                    <label>
-                        {t('settings.aiProvider')}
-                        <select value={aiProvider}
-                            onChange={(e) => {
-                                const p = e.target.value as AIProviderID;
-                                setAIProvider(p);
-                                onSave(buildSettings({ aiProvider: p }), aiApiKey);
-                            }}>
-                            <option value="anthropic">Anthropic</option>
-                            <option value="openai">OpenAI</option>
-                            <option value="azure-openai">Azure OpenAI</option>
-                            <option value="openrouter">OpenRouter</option>
-                        </select>
-                    </label>
-                </div>
-                <div>
-                    <label>
-                        {t('settings.aiApiKey')}
-                        <input type="password" value={aiApiKey} onChange={(e) => setAIApiKey(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
-                    </label>
-                </div>
-                {aiProvider === 'azure-openai' && (
+                {storageBackend !== 'server' && (
                     <>
                         <div>
                             <label>
-                                {t('settings.azureEndpoint')}
-                                <input type="text" value={azureEndpoint} onChange={(e) => setAzureEndpoint(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
+                                {t('settings.aiProvider')}
+                                <select value={aiProvider}
+                                    onChange={(e) => {
+                                        const p = e.target.value as AIProviderID;
+                                        setAIProvider(p);
+                                        onSave(buildSettings({ aiProvider: p }), aiApiKey);
+                                    }}>
+                                    <option value="anthropic">Anthropic</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="azure-openai">Azure OpenAI</option>
+                                    <option value="openrouter">OpenRouter</option>
+                                </select>
                             </label>
                         </div>
                         <div>
                             <label>
-                                {t('settings.azureDeployment')}
-                                <input type="text" value={azureDeployment} onChange={(e) => setAzureDeployment(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
+                                {t('settings.aiApiKey')}
+                                <input type="password" value={aiApiKey} onChange={(e) => setAIApiKey(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
                             </label>
                         </div>
+                        {aiProvider === 'azure-openai' && (
+                            <>
+                                <div>
+                                    <label>
+                                        {t('settings.azureEndpoint')}
+                                        <input type="text" value={azureEndpoint} onChange={(e) => setAzureEndpoint(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
+                                    </label>
+                                </div>
+                                <div>
+                                    <label>
+                                        {t('settings.azureDeployment')}
+                                        <input type="text" value={azureDeployment} onChange={(e) => setAzureDeployment(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
+                                    </label>
+                                </div>
+                            </>
+                        )}
+                        {aiProvider === 'openrouter' && (
+                            <div>
+                                <label>
+                                    {t('settings.openRouterModel')}
+                                    <input type="text" value={openRouterModel} onChange={(e) => setOpenRouterModel(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
+                                </label>
+                            </div>
+                        )}
                     </>
-                )}
-                {aiProvider === 'openrouter' && (
-                    <div>
-                        <label>
-                            {t('settings.openRouterModel')}
-                            <input type="text" value={openRouterModel} onChange={(e) => setOpenRouterModel(e.target.value)} onBlur={() => onSave(buildSettings(), aiApiKey)} />
-                        </label>
-                    </div>
                 )}
                 <div>
                     <label>
