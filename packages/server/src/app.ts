@@ -37,9 +37,13 @@ export async function buildApp() {
 
   if (process.env.NODE_ENV !== 'test') {
     await app.register(rateLimit, {
-      max: 10,
-      timeWindow: '1 minute',
-      keyGenerator: (request) => request.ip,
+        max: 10,
+        timeWindow: '1 minute',
+        keyGenerator: (request) => request.ip,
+        allowList: (request) => {
+            // Allow unlimited requests from localhost for testing purposes
+            return request.ip === '127.0.0.1' || request.ip === '::1';
+        }
     });
   }
 
