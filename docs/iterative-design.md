@@ -66,6 +66,14 @@ Found through manual testing. Fixed by reading from a ref rather than the stale 
 
 ---
 
+### Bookmarks sorted alphabetically within tag groups (PR #61)
+
+Bookmark ordering within tag tree nodes was determined by insertion order — the order bookmarks were added to the array, which varies by storage backend. File and browser storage preserve insertion order; the server returns bookmarks by creation timestamp. Importing from the browser produced one order; loading the same bookmarks back from the server produced a different one.
+
+The fix sorts bookmarks alphabetically by title at display time in `buildTagTree` and in the untagged list, and sorts tag nodes alphabetically by name at every level of the tree. This is consistent across all storage backends and predictable for the user regardless of when or how bookmarks were added.
+
+---
+
 ## Security and data model changes
 
 ### AI API key moved out of the bookmarks data (PR #54)

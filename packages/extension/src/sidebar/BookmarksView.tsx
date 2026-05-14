@@ -22,8 +22,9 @@ interface BookmarksViewProps {
 
 function buildTagTree(bookmarks: Bookmark[]): Map<string, TagNode> {
     const root = new Map<string, TagNode>();
+    const sortedBookmarks = [...bookmarks].sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
 
-    for (const bookmark of bookmarks) {
+    for (const bookmark of sortedBookmarks) {
         for (const tag of bookmark.tags) {
             const segments = tag.split('/');
             let currentNode = root;
@@ -76,7 +77,8 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
         : bookmarks;
 
     const tree = buildTagTree(filtered);
-    const untagged = filtered.filter((b) => b.tags.length === 0);
+    const untagged = filtered.filter((b) => b.tags.length === 0)
+        .sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
 
     async function handleSaveCurrentPage() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -142,21 +144,21 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
             <div className="bookmarks-toolbar">
                 <button className="icon-btn" onClick={handleSaveCurrentPage} data-tooltip={t('bookmarksView.saveCurrentPage')}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v12l-5-2.5L3 14V2z"/>
+                        <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v12l-5-2.5L3 14V2z" />
                     </svg>
                 </button>
                 {tree.size > 0 && (
                     <>
                         <button className="icon-btn" onClick={handleExpandAll} data-tooltip={t('bookmarksView.expandAll')}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="4,3 8,7 12,3"/>
-                                <polyline points="4,8 8,12 12,8"/>
+                                <polyline points="4,3 8,7 12,3" />
+                                <polyline points="4,8 8,12 12,8" />
                             </svg>
                         </button>
                         <button className="icon-btn" onClick={handleCollapseAll} data-tooltip={t('bookmarksView.collapseAll')}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="4,8 8,4 12,8"/>
-                                <polyline points="4,13 8,9 12,13"/>
+                                <polyline points="4,8 8,4 12,8" />
+                                <polyline points="4,13 8,9 12,13" />
                             </svg>
                         </button>
                     </>
@@ -172,9 +174,11 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
                 ? <p className="empty-state">{t('bookmarksView.noResults')}</p>
                 :
                 <ul className="tag-tree">
-                    {Array.from(tree.values()).map((node) => (
-                        <TagTreeNode key={node.fullPath} node={node} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} treeState={treeState} onToggle={handleToggleNode} openInNewTab={openInNewTab} />
-                    ))}
+                    {Array.from(tree.values())
+                        .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+                        .map((node) => (
+                            <TagTreeNode key={node.fullPath} node={node} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} treeState={treeState} onToggle={handleToggleNode} openInNewTab={openInNewTab} />
+                        ))}
                     {untagged.length > 0 && (
                         <li className="tree-node">
                             <span className="tree-label">{t('bookmarksView.untagged')}</span>
@@ -210,9 +214,11 @@ function TagTreeNode({ node, onUpdate, onDelete, onEdit, treeState, onToggle, op
             </span>
             {expanded && (
                 <ul>
-                    {Array.from(node.children.values()).map((child) => (
-                        <TagTreeNode key={child.fullPath} node={child} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} treeState={treeState} onToggle={onToggle} openInNewTab={openInNewTab} />
-                    ))}
+                    {Array.from(node.children.values())
+                        .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+                        .map((child) => (
+                            <TagTreeNode key={child.fullPath} node={child} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} treeState={treeState} onToggle={onToggle} openInNewTab={openInNewTab} />
+                        ))}
                     {hasBookmarks && node.bookmarks.map((bookmark) => (
                         <BookmarkLeaf key={bookmark.id} bookmark={bookmark} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} openInNewTab={openInNewTab} />
                     ))}
