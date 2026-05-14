@@ -154,10 +154,9 @@ export function App() {
             setError(err instanceof Error ? err.message : 'Failed to save bookmark');
         }
 
-        if (apiKey) {
+        if (apiKey || settingsRef.current?.storageBackend === 'server') {
             try {
-                const provider = createProvider(settingsRef.current!, apiKey);
-                const suggestedTags = await provider.suggestTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
+                const suggestedTags = await fetchSuggestedTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
                 if (suggestedTags.length > 0) {
                     const withTags: Bookmark = {
                         ...bookmark,
@@ -202,6 +201,21 @@ export function App() {
 
     async function fetchSuggestedTags(url: string, title: string, description: string, tags: string[]): Promise<string[]> {
         try {
+            if (settingsRef.current?.storageBackend === 'server') {
+                const serverUrl = settingsRef.current.serverUrl!.replace(/\/+$/, '');
+                const token = await getServerToken();
+                const response = await fetch(`${serverUrl}/ai/suggest-tags`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ url, title, description, existingTags: tags }),
+                });
+                if (!response.ok) return [];
+                const data = await response.json() as { tags: string[] };
+                return data.tags;
+            }
             const provider = createProvider(settingsRef.current!, apiKey);
             return await provider.suggestTags(url, title, description, tags);
         } catch {
@@ -252,7 +266,7 @@ export function App() {
                         setEditingBookmark(updated);
                     }}
                     onClose={() => setEditingBookmark(null)}
-                    onSuggestTags={apiKey ? fetchSuggestedTags : undefined}
+                    onSuggestTags={apiKey || settings?.storageBackend === 'server' ? fetchSuggestedTags : undefined}
                 />
             )}
         </div>

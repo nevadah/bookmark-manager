@@ -7,6 +7,7 @@ import { sessionPlugin } from './plugins/session.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { bookmarkRoutes } from './routes/bookmarks.js';
+import { aiRoutes } from './routes/ai.js';
 import cors from '@fastify/cors';
 
 export async function buildApp() {
@@ -53,6 +54,7 @@ export async function buildApp() {
   await app.register(healthRoutes);
   await app.register(authRoutes);
   await app.register(bookmarkRoutes);
+  await app.register(aiRoutes);
 
   return app;
 }
