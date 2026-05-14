@@ -4,6 +4,7 @@ const bookmarkBody = {
   type: 'object',
   required: ['url', 'title'],
   properties: {
+    id:          { type: 'string' },
     url:         { type: 'string', format: 'uri' },
     title:       { type: 'string', minLength: 1 },
     description: { type: 'string' },
@@ -37,14 +38,15 @@ export async function bookmarkRoutes(app: FastifyInstance) {
     preHandler: app.authenticate,
     schema: { body: bookmarkBody },
   }, async (request, reply) => {
-    const { url, title, description = '', tags = [], faviconUrl } =
+    const { id, url, title, description = '', tags = [], faviconUrl } =
       request.body as {
+        id?: string;
         url: string; title: string; description?: string;
         tags?: string[]; faviconUrl?: string;
       };
 
     const bookmark = await app.prisma.bookmark.create({
-      data: { url, title, description, tags, faviconUrl, userId: request.user.id },
+      data: { ...(id && { id }), url, title, description, tags, faviconUrl, userId: request.user.id },
     });
 
     return reply.code(201).send(bookmark);

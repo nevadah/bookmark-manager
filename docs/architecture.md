@@ -41,9 +41,9 @@ Communication between contexts uses `chrome.runtime.sendMessage` / `chrome.runti
 Sidebar  ──sendMessage──▶  Background SW  ──fetch──▶  AI provider API
                                 │
                          StorageProvider
-                        ┌───────┴────────┐
-               File System          chrome.storage.local
-               (local JSON)         (browser storage)
+               ┌──────────────┼──────────────┐
+       File System    chrome.storage.local    Remote API
+       (local JSON)   (browser storage)       (server sync)
 ```
 
 Content scripts are used only for reading page metadata (title, URL) at save time — they do not participate in storage or AI calls.
@@ -59,7 +59,7 @@ interface StorageProvider {
 }
 ```
 
-Two local implementations ship currently. The user chooses during setup; the choice is persisted in `chrome.storage.local`.
+Three implementations ship currently. The user chooses in the Settings panel; the choice is persisted in `chrome.storage.local`.
 
 #### FileSystemStorageProvider
 
@@ -80,9 +80,13 @@ Writes are full-file overwrites (read → mutate → write). At bookmark-manager
 
 Reads and writes `chrome.storage.local` directly. Simpler setup — no file picker, no IndexedDB handle management. Data is tied to the browser profile and subject to `chrome.storage.local`'s quota (~10MB, sufficient for typical use).
 
-#### RemoteStorageProvider (planned)
+#### RemoteStorageProvider
 
-A third implementation will talk to the backend API, enabling native multi-device sync, team/org use, and SaaS deployment. The `StorageProvider` interface means adding it requires no changes to application code — only a new implementation and a new option in the settings UI.
+Syncs with the backend service over HTTP. On `readData()`, fetches all bookmarks via `GET /bookmarks`. On `writeData()`, diffs against an in-memory cache populated by the last `readData()` call and issues only the necessary `POST`, `PATCH`, and `DELETE` requests — unchanged bookmarks generate no traffic.
+
+On first connection, local bookmarks are merged with any existing server bookmarks — server wins on URL conflict, local-only bookmarks are pushed up.
+
+**Setup:** Select Server in the Storage Backend setting, enter the server URL, then sign in or create an account. The session token is stored in `chrome.storage.local`.
 
 ### Build output
 

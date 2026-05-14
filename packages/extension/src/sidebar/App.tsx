@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { RootData, Settings, Bookmark } from '@bookmark-manager/shared';
 import { createStorageProvider } from "../storage";
-import { getApiKey, saveApiKey } from "../storage/credentials";
+import { StorageProvider } from "../storage/types";
+import { getApiKey, saveApiKey, getServerToken, saveServerToken, clearServerToken } from "../storage/credentials";
 import { createProvider } from "../providers";
 import { SettingsView } from "./SettingsView";
 import { BookmarksView } from "./BookmarksView";
@@ -17,20 +18,25 @@ export function App() {
     const [view, setView] = useState<View>('bookmarks');
     const [rootData, setRootData] = useState<RootData | null>(null);
     const [apiKey, setApiKey] = useState<string>('');
+    const [serverToken, setServerToken] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
     const [settings, setSettings] = useState<Settings | null>(null);
     const rootDataRef = useRef<RootData | null>(null);
     const settingsRef = useRef<Settings | null>(null);
+    const storageProviderRef = useRef<StorageProvider | null>(null);
 
     useEffect(() => {
         async function bootstrap() {
             try {
-                const [loadedSettings, key] = await Promise.all([getSettings(), getApiKey()]);
-                const data = await createStorageProvider(loadedSettings).readData();
+                const [loadedSettings, key, token] = await Promise.all([getSettings(), getApiKey(), getServerToken()]);
+                const provider = createStorageProvider(loadedSettings);
+                storageProviderRef.current = provider;
+                const data = await provider.readData();
                 setSettings(loadedSettings);
                 setRootData(data);
                 setApiKey(key);
+                setServerToken(token);
             } catch (err) {
                 setError('Failed to load data: ' + (err instanceof Error ? err.message : String(err)));
             }
@@ -58,7 +64,7 @@ export function App() {
             const bookmarks = current.bookmarks.map((b) => b.id === updated.id ? updated : b);
             const updatedData = { ...current, bookmarks };
             try {
-                await createStorageProvider(settingsRef.current!).writeData(updatedData);
+                await storageProviderRef.current!.writeData(updatedData);
                 setRootData(updatedData);
             } catch {
                 // silently fail — favicon is non-critical
@@ -72,9 +78,12 @@ export function App() {
         const base = rootData ?? { version: '1.0' as const, bookmarks: [] };
         let mergedBookmarks = base.bookmarks;
 
+        const provider = createStorageProvider(newSettings);
+        storageProviderRef.current = provider;
+
         if (newSettings.storageBackend === 'file') {
             try {
-                const existing = await createStorageProvider(newSettings).readData();
+                const existing = await provider.readData();
                 if (existing.bookmarks.length > 0) {
                     const fileUrls = new Set(existing.bookmarks.map((b) => b.url));
                     const fromBrowser = base.bookmarks.filter((b) => !fileUrls.has(b.url));
@@ -91,7 +100,7 @@ export function App() {
         };
 
         try {
-            await createStorageProvider(newSettings).writeData(dataToWrite);
+            await provider.writeData(dataToWrite);
             await saveSettings(newSettings);
             await saveApiKey(newApiKey);
             setRootData(dataToWrite);
@@ -102,13 +111,44 @@ export function App() {
         }
     }
 
+    async function handleLogin(token: string) {
+        try {
+            await saveServerToken(token);
+            setServerToken(token);
+            const newSettings: Settings = { ...settingsRef.current!, storageBackend: 'server' };
+            const provider = createStorageProvider(newSettings);
+            storageProviderRef.current = provider;
+            const serverData = await provider.readData();
+            const local = rootDataRef.current!.bookmarks;
+            const serverUrls = new Set(serverData.bookmarks.map(b => b.url));
+            const localOnly = local.filter(b => !serverUrls.has(b.url));
+            const merged: RootData = { version: '1.0', bookmarks: [...serverData.bookmarks, ...localOnly] };
+            await provider.writeData(merged);
+            await saveSettings(newSettings);
+            setSettings(newSettings);
+            setRootData(merged);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to connect to server');
+        }
+    }
+
+    async function handleLogout() {
+        try {
+            await clearServerToken();
+            setServerToken('');
+            handleSaveSettings({ ...settings!, storageBackend: 'browser' }, apiKey);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to logout');
+        }
+    }
+
     async function handleAddBookmark(bookmark: Bookmark) {
         const updated: RootData = {
             ...rootData!,
             bookmarks: [...rootData!.bookmarks, bookmark]
         };
         try {
-            await createStorageProvider(settingsRef.current!).writeData(updated);
+            await storageProviderRef.current!.writeData(updated);
             setRootData(updated);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save bookmark');
@@ -129,7 +169,7 @@ export function App() {
                         ...current,
                         bookmarks: current.bookmarks.map((b) => b.id === withTags.id ? withTags : b)
                     };
-                    await createStorageProvider(settingsRef.current!).writeData(withAiTags);
+                    await storageProviderRef.current!.writeData(withAiTags);
                     setRootData(withAiTags);
                 }
             } catch {
@@ -142,7 +182,7 @@ export function App() {
         const bookmarks = rootData!.bookmarks.map((b) => b.id === updated.id ? updated : b);
         const updatedData = { ...rootData!, bookmarks };
         try {
-            await createStorageProvider(settingsRef.current!).writeData(updatedData);
+            await storageProviderRef.current!.writeData(updatedData);
             setRootData(updatedData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update bookmark');
@@ -153,7 +193,7 @@ export function App() {
         const bookmarks = rootData!.bookmarks.filter((b) => b.id !== id);
         const updatedData = { ...rootData!, bookmarks };
         try {
-            await createStorageProvider(settingsRef.current!).writeData(updatedData);
+            await storageProviderRef.current!.writeData(updatedData);
             setRootData(updatedData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete bookmark');
@@ -180,7 +220,7 @@ export function App() {
                 ...rootData!,
                 bookmarks: [...rootData!.bookmarks, ...newBookmarks]
             };
-            await createStorageProvider(settingsRef.current!).writeData(updatedData);
+            await storageProviderRef.current!.writeData(updatedData);
             setRootData(updatedData);
         }
         return { imported: newBookmarks.length, skipped };
@@ -202,7 +242,7 @@ export function App() {
             </nav>
             <main>
                 {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={settings!.openInNewTab ?? true} />}
-                {view === 'settings' && <SettingsView settings={settings!} apiKey={apiKey} onSave={handleSaveSettings} onImport={handleImport} />}
+                {view === 'settings' && <SettingsView settings={settings!} apiKey={apiKey} onSave={handleSaveSettings} onImport={handleImport} serverToken={serverToken} onLogin={handleLogin} onLogout={handleLogout} />}
             </main>
             {editingBookmark && (
                 <EditPanel

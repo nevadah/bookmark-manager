@@ -62,6 +62,19 @@ describe('POST /bookmarks', () => {
     });
     expect(res.statusCode).toBe(400);
   });
+
+  it('uses a client-provided id when given', async () => {
+    const clientId = '123e4567-e89b-12d3-a456-426614174000';
+    const res = await app.inject({
+        method: 'POST',
+        url: '/bookmarks',
+        headers: { authorization: `Bearer ${token}` },
+        payload: { id: clientId, url: 'https://example.com/client-id', title: 'Client ID Test' },
+    });
+    expect(res.statusCode).toBe(201);
+    expect(JSON.parse(res.body).id).toBe(clientId);
+  });
+
 });
 
 describe('PATCH /bookmarks/:id', () => {
