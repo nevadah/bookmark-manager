@@ -7,6 +7,7 @@ import { sessionPlugin } from './plugins/session.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { bookmarkRoutes } from './routes/bookmarks.js';
+import cors from '@fastify/cors';
 
 export async function buildApp() {
   const app = Fastify({ logger: true });
@@ -24,13 +25,23 @@ export async function buildApp() {
     routePrefix: '/docs',
   });
 
-if (process.env.NODE_ENV !== 'test') {
-  await app.register(rateLimit, {
-    max: 10,
-    timeWindow: '1 minute',
-    keyGenerator: (request) => request.ip,
+  await app.register(cors, {
+      origin: (origin, cb) => {
+          if (!origin || origin.startsWith('chrome-extension://') || origin.startsWith('http://localhost')) {
+              cb(null, true);
+          } else {
+              cb(new Error('Not allowed'), false);
+          }
+      },
   });
-}
+
+  if (process.env.NODE_ENV !== 'test') {
+    await app.register(rateLimit, {
+      max: 10,
+      timeWindow: '1 minute',
+      keyGenerator: (request) => request.ip,
+    });
+  }
 
   await app.register(prismaPlugin);
   await app.register(sessionPlugin);

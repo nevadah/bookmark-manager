@@ -8,18 +8,27 @@ interface SettingsViewProps {
     apiKey: string;
     onSave: (settings: Settings, apiKey: string) => void;
     onImport: () => Promise<{ imported: number; skipped: number }>;
+    serverToken: string;
+    onLogin: (token: string) => void;
+    onLogout: () => void;
 }
 
-export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsViewProps) {
+export function SettingsView({ settings, apiKey, onSave, onImport, serverToken, onLogin, onLogout }: SettingsViewProps) {
     const { t } = useTranslation();
     const [aiProvider, setAIProvider] = useState<AIProviderID>(settings.aiProvider);
     const [aiApiKey, setAIApiKey] = useState(apiKey);
     const [storageBackend, setStorageBackend] = useState<StorageBackend>(settings.storageBackend);
+    const [serverUrl, setServerUrl] = useState(settings.serverUrl ?? '');
     const [azureEndpoint, setAzureEndpoint] = useState(settings.azureEndpoint ?? '');
     const [azureDeployment, setAzureDeployment] = useState(settings.azureDeployment ?? '');
     const [openRouterModel, setOpenRouterModel] = useState(settings.openRouterModel ?? '');
     const [fileHandleName, setFileHandleName] = useState<string | null>(null);
     const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
+    const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+    const [authEmail, setAuthEmail] = useState('');
+    const [authPassword, setAuthPassword] = useState('');
+    const [authPasswordConfirm, setAuthPasswordConfirm] = useState('');
+    const [authError, setAuthError] = useState<string | null>(null);
     const openInNewTab = settings.openInNewTab ?? true;
     const fileSystemSupported = typeof window.showSaveFilePicker === 'function';
 
@@ -29,6 +38,7 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
         const s: Settings = {
             aiProvider: provider,
             storageBackend: backend,
+            serverUrl: overrides?.serverUrl ?? serverUrl,
             openInNewTab: settings.openInNewTab ?? true
         };
         if (provider === 'azure-openai') {
@@ -70,10 +80,65 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
         }
     }
 
-
     async function handleImport() {
         const result = await onImport();
         setImportResult(result);
+    }
+
+    async function handleSignIn() {
+        setAuthError(null);
+        if (!serverUrl) {
+            setAuthError(t('settings.serverUrlRequired'));
+            return;
+        }
+        try {            
+            const response = await fetch(`${serverUrl.replace(/\/+$/, '')}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: authEmail, password: authPassword }),
+            });
+            if (!response.ok) {
+                setAuthError(t('settings.loginFailed'));
+                return;
+            }
+            const data = await response.json();
+            onLogin(data.token);
+            setAuthEmail('');
+            setAuthPassword('');
+            setAuthPasswordConfirm('');
+        } catch {
+            setAuthError(t('settings.loginFailed'));
+        }
+    }
+
+    async function handleSignUp() {
+        setAuthError(null);
+        if (!serverUrl) {
+            setAuthError(t('settings.serverUrlRequired'));
+            return;
+        }
+        if (authPassword !== authPasswordConfirm) {
+            setAuthError(t('settings.passwordMismatch'));
+            return;
+        }
+        try {
+            const response = await fetch(`${serverUrl.replace(/\/+$/, '')}/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: authEmail, password: authPassword }),
+            });
+            if (!response.ok) {
+                setAuthError(t('settings.signupFailed'));
+                return;
+            }
+            const data = await response.json();
+            onLogin(data.token);
+            setAuthEmail('');
+            setAuthPassword('');
+            setAuthPasswordConfirm('');
+        } catch {
+            setAuthError(t('settings.signupFailed'));
+        }
     }
 
     useEffect(() => {
@@ -143,10 +208,12 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
                                 const b = e.target.value as StorageBackend;
                                 setStorageBackend(b);
                                 if (b === 'file' && !fileHandleName) return;
+                                if (b === 'server') return;
                                 onSave(buildSettings({ storageBackend: b }), aiApiKey);
                             }}>
                             <option value="browser">{t('settings.storageBrowser')}</option>
                             {fileSystemSupported && <option value="file">{t('settings.storageFile')}</option>}
+                            <option value="server">{t('settings.storageServer')}</option>
                         </select>
                     </label>
                 </div>
@@ -157,6 +224,59 @@ export function SettingsView({ settings, apiKey, onSave, onImport }: SettingsVie
                         {fileHandleName && <span>{t('settings.selectedFile', { name: fileHandleName })}</span>}
                     </div>
                 )}
+                {storageBackend === 'server' && (
+                    <div className="server-auth">
+                        <label>
+                            {t('settings.serverUrl')}
+                            <input type ="text" value={serverUrl ?? ''} onChange={(e) => setServerUrl(e.target.value)} onBlur={(e) => onSave(buildSettings({ serverUrl: e.target.value }), aiApiKey)} />
+                        </label>
+                    </div>
+                )}
+                {storageBackend === 'server' && (
+                    <>
+                        {serverToken ? (
+                            <div className="server-auth">
+                                <p>{t('settings.loggedIn')}</p>
+                                <button type="button" onClick={onLogout}>{t('settings.logout')}</button>
+                            </div>
+                        ) : (
+                            <div className="server-auth">
+                                {authMode === 'signin' ? (
+                                    <>
+                                        <label>
+                                            {t('settings.email')}
+                                            <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} />
+                                        </label>
+                                        <label>
+                                            {t('settings.password')}
+                                            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} />
+                                        </label>
+                                        {authError && <p className="auth-error">{authError}</p>}
+                                        <button type="button" onClick={handleSignIn}>{t('settings.signIn')}</button>
+                                        <button type="button" onClick={() => setAuthMode('signup')}>{t('settings.signUp')}</button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <label>
+                                            {t('settings.email')}
+                                            <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} />
+                                        </label>
+                                        <label>
+                                            {t('settings.password')}
+                                            <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} />
+                                        </label>
+                                        <label>
+                                            {t('settings.confirmPassword')}
+                                            <input type="password" value={authPasswordConfirm} onChange={(e) => setAuthPasswordConfirm(e.target.value)} />
+                                        </label>
+                                        {authError && <p className="auth-error">{authError}</p>}
+                                        <button type="button" onClick={handleSignUp}>{t('settings.signUp')}</button>
+                                        <button type="button" onClick={() => setAuthMode('signin')}>{t('settings.cancel')}</button>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </>)}
                 <label className="checkbox-label">
                     <input
                         type="checkbox"

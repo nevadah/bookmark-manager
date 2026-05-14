@@ -1,11 +1,12 @@
 export type AIProviderID = 'anthropic' | 'openai' | 'azure-openai' | 'openrouter';
-export type StorageBackend = 'file' | 'browser';
+export type StorageBackend = 'file' | 'browser' | 'server';
 
 export type RootDataVersion = '1.0';
 
 export interface Settings {
     aiProvider: AIProviderID;
     storageBackend: StorageBackend;
+    serverUrl?: string;
     azureEndpoint?: string;
     azureDeployment?: string;
     openRouterModel?: string;
