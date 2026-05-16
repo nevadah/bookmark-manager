@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bookmark_manager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/bookmark_manager
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_AZURE_ENDPOINT: ${AI_AZURE_ENDPOINT:-}
+      AI_AZURE_DEPLOYMENT: ${AI_AZURE_DEPLOYMENT:-}
+      AI_OPENROUTER_MODEL: ${AI_OPENROUTER_MODEL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

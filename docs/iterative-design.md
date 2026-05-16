@@ -126,6 +126,20 @@ Found by testing the intended workflow: create bookmarks in one browser, export 
 
 ---
 
+## Implementation errors caught in testing
+
+### Duplicate Dockerfile caused migrations to never run (PR #64)
+
+While writing the Dockerfile for server deployment, the AI assistant created the file twice: first at the repo root (`Dockerfile`), then again at `packages/server/Dockerfile` as originally intended. The root file was left behind with the original content — `node:22-alpine` as the base image and no `prisma migrate deploy` step in the startup command.
+
+`docker-compose.yml` specified `dockerfile: packages/server/Dockerfile`, but `podman-compose` ignored the `dockerfile:` field and resolved the build context root, finding and using the root `Dockerfile` instead. The result was a container that started the server directly without running migrations, causing every database request to fail with "relation does not exist".
+
+Detected by running `podman compose up` and attempting a signup — the server returned 500 and the Postgres logs showed the `User` table did not exist. The root cause became clear when the build output showed `FROM node:22-alpine` instead of the expected `node:24-alpine`, confirming the wrong Dockerfile was being used.
+
+Fixed by updating the root `Dockerfile` with the correct content (node:24, migration retry loop in the startup command), pointing `docker-compose.yml` to `dockerfile: Dockerfile` explicitly, and removing `packages/server/Dockerfile`.
+
+---
+
 ## Pushed back on a planned design
 
 ### JWT replaced with server-side sessions (PR #47)
