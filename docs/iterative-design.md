@@ -2,6 +2,8 @@
 
 This document records design decisions that changed as a direct result of using the extension — cases where the original design looked reasonable on paper but turned out to be wrong in practice. It also includes a few cases where I applied independent judgment to push back on or extend a design before a problem became apparent.
 
+Bugs discovered through use are tracked separately in [bugs-found-in-testing.md](bugs-found-in-testing.md).
+
 This is the record the README refers to when it says the project "tracks those decisions and the changes that follow from real use."
 
 ---
@@ -50,22 +52,6 @@ After running an import and seeing a list of blank icons, the solution became ob
 
 ---
 
-### File System Access API feature-detected for Firefox (PR #53)
-
-The file storage option was shown to all users regardless of browser. On Chromium, it works. On Firefox, clicking the option did nothing — Firefox does not implement `showSaveFilePicker`.
-
-Found by loading the extension in Firefox and trying to select a file. The fix gates the option on `typeof window.showSaveFilePicker === 'function'`, hiding it entirely in browsers that don't support it.
-
----
-
-### AI tag race condition fixed (PR #26)
-
-Saving bookmarks quickly in succession caused AI-suggested tags to be lost or applied to the wrong bookmark. The async AI tagging call was closing over a stale copy of state and writing back outdated data.
-
-Found through manual testing. Fixed by reading from a ref rather than the stale closure, ensuring the AI write-back always applies to the current state.
-
----
-
 ### Bookmarks sorted alphabetically within tag groups (PR #61)
 
 Bookmark ordering within tag tree nodes was determined by insertion order — the order bookmarks were added to the array, which varies by storage backend. File and browser storage preserve insertion order; the server returns bookmarks by creation timestamp. Importing from the browser produced one order; loading the same bookmarks back from the server produced a different one.
@@ -102,14 +88,6 @@ A right-click context menu was added with the full set of open actions (current 
 
 ---
 
-### Tag tree expand/collapse state not persisted (PR #57)
-
-The expand and collapse state of tag tree nodes was stored only in React component state. Switching to the Settings tab and back caused `BookmarksView` to unmount and remount, resetting everything to fully expanded.
-
-Found by using the extension normally — collapsing some branches to reduce noise, then navigating to settings and back. The fix persists expand/collapse state per tag path in `chrome.storage.local`, survives browser restarts, and prunes entries for tag paths that no longer exist when bookmarks change.
-
----
-
 ### Save Settings button removed in favor of auto-save (PR #58)
 
 The Settings form had an explicit Save Settings button. In practice this caused a recurring "forgot to save" problem — settings would be changed but not take effect until the button was clicked.
@@ -117,36 +95,6 @@ The Settings form had an explicit Save Settings button. In practice this caused 
 Selects now save on change, text inputs save on blur, and the file picker saves immediately after a file is selected. The Save Settings button was removed entirely.
 
 ---
-
-### File storage split into "New File" and "Open Existing File" (PR #59)
-
-The file storage option had a single "Select File..." button backed by `showSaveFilePicker`. When pointing it at an existing bookmarks file, Chrome shows a "Replace?" confirmation before handing back the handle — and by the time the extension calls `readData()`, the file has already been truncated. JSON.parse fails on the empty content, the catch block fires with an empty bookmark list, and that empty list is written back, destroying the file's contents.
-
-Found by testing the intended workflow: create bookmarks in one browser, export to a file, open in a second browser by selecting the same file. The fix splits the action into two buttons: "New File..." continues to use `showSaveFilePicker` for creating a fresh file, while "Open Existing File..." uses `showOpenFilePicker` followed by `requestPermission({ mode: 'readwrite' })`. The open picker never truncates — it reads first, merges, then writes.
-
----
-
-## Implementation errors caught in testing
-
-### Duplicate Dockerfile caused migrations to never run (PR #64)
-
-While writing the Dockerfile for server deployment, the AI assistant created the file twice: first at the repo root (`Dockerfile`), then again at `packages/server/Dockerfile` as originally intended. The root file was left behind with the original content — `node:22-alpine` as the base image and no `prisma migrate deploy` step in the startup command.
-
-`docker-compose.yml` specified `dockerfile: packages/server/Dockerfile`, but `podman-compose` ignored the `dockerfile:` field and resolved the build context root, finding and using the root `Dockerfile` instead. The result was a container that started the server directly without running migrations, causing every database request to fail with "relation does not exist".
-
-Detected by running `podman compose up` and attempting a signup — the server returned 500 and the Postgres logs showed the `User` table did not exist. The root cause became clear when the build output showed `FROM node:22-alpine` instead of the expected `node:24-alpine`, confirming the wrong Dockerfile was being used.
-
-Fixed by updating the root `Dockerfile` with the correct content (node:24, migration retry loop in the startup command), pointing `docker-compose.yml` to `dockerfile: Dockerfile` explicitly, and removing `packages/server/Dockerfile`.
-
----
-
-### Server backend bookmarks lost on browser restart (PR #65)
-
-The initial server storage implementation used `RemoteStorageProvider` as the primary store — every read went directly to the server and the results were held in an in-memory cache. This meant bookmarks were only available while there was an active network connection and a live cache. Reloading the extension or restarting the browser cleared the cache, and the sidebar showed nothing until the next successful fetch from the server.
-
-The failure mode was discovered by restarting the browser with the server backend active and observing an empty bookmark list, even though the server had all the data. The in-memory cache was also the cause of the earlier-documented sync race condition.
-
-The fix replaced the architecture entirely. The server is no longer the primary store — browser storage is always the working copy. `SyncService` syncs bidirectionally with the server using `POST /sync`, which merges changes using last-write-wins on `updatedAt`. Soft-delete tombstones (`deletedAt`) propagate deletions across devices without data loss. Sync is triggered on startup, debounced 3 seconds after every write, and runs on a 15-minute background alarm. The extension icon badge turns red if sync fails, and a status line appears in the sidebar. Bookmarks now survive browser restarts, extension reloads, and temporary server outages.
 
 ---
 
