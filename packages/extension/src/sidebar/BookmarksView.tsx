@@ -51,6 +51,7 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
     const { t } = useTranslation();
     const [treeState, setTreeState] = useState<Record<string, boolean>>({});
     const [filterQuery, setFilterQuery] = useState('');
+    const [alreadySaved, setAlreadySaved] = useState(false);
 
     useEffect(() => {
         getTreeState().then(setTreeState);
@@ -83,6 +84,12 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
     async function handleSaveCurrentPage() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.url) return;
+
+        if (bookmarks.some(b => b.url === tab.url)) {
+            setAlreadySaved(true);
+            setTimeout(() => setAlreadySaved(false), 2000);
+            return;
+        }
 
         onAdd({
             id: crypto.randomUUID(),
@@ -134,7 +141,9 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
     if (bookmarks.length === 0) {
         return (
             <div>
-                <button onClick={handleSaveCurrentPage}>{t('bookmarksView.saveCurrentPage')}</button>
+                <button onClick={handleSaveCurrentPage}>
+                    {alreadySaved ? t('bookmarksView.alreadySaved') : t('bookmarksView.saveCurrentPage')}
+                </button>
                 <p className="empty-state">{t('bookmarksView.emptyState')}</p>
             </div>
         );
@@ -143,7 +152,7 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
     return (
         <div>
             <div className="bookmarks-toolbar">
-                <button className="icon-btn" onClick={handleSaveCurrentPage} data-tooltip={t('bookmarksView.saveCurrentPage')}>
+                <button className="icon-btn" onClick={handleSaveCurrentPage} data-tooltip={alreadySaved ? t('bookmarksView.alreadySaved') : t('bookmarksView.saveCurrentPage')}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v12l-5-2.5L3 14V2z" />
                     </svg>

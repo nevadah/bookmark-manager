@@ -196,6 +196,8 @@ export function App() {
     }
 
     async function handleAddBookmark(bookmark: Bookmark) {
+        if (rootData!.bookmarks.some(b => b.url === bookmark.url && !b.deletedAt)) return;
+
         const updated: RootData = {
             ...rootData!,
             bookmarks: [...rootData!.bookmarks, bookmark]

@@ -12,6 +12,7 @@
     "emptyState": "No bookmarks yet. Save a page to get started.",
     "noResults": "No bookmarks match your search.",
     "saveCurrentPage": "Save Current Page",
+    "alreadySaved": "Already Saved",
     "expandAll": "Expand All",
     "collapseAll": "Collapse All",
     "untagged": "Untagged"
