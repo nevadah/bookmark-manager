@@ -38,6 +38,8 @@ describe('POST /ai/suggest-tags', () => {
   });
 
   it('returns empty tags when AI is not configured', async () => {
+    vi.stubEnv('AI_PROVIDER', '');
+    vi.stubEnv('AI_API_KEY', '');
     const res = await app.inject({
       method: 'POST',
       url: '/ai/suggest-tags',

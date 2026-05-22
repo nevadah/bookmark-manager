@@ -140,6 +140,16 @@ Fixed by updating the root `Dockerfile` with the correct content (node:24, migra
 
 ---
 
+### Server backend bookmarks lost on browser restart (PR #65)
+
+The initial server storage implementation used `RemoteStorageProvider` as the primary store — every read went directly to the server and the results were held in an in-memory cache. This meant bookmarks were only available while there was an active network connection and a live cache. Reloading the extension or restarting the browser cleared the cache, and the sidebar showed nothing until the next successful fetch from the server.
+
+The failure mode was discovered by restarting the browser with the server backend active and observing an empty bookmark list, even though the server had all the data. The in-memory cache was also the cause of the earlier-documented sync race condition.
+
+The fix replaced the architecture entirely. The server is no longer the primary store — browser storage is always the working copy. `SyncService` syncs bidirectionally with the server using `POST /sync`, which merges changes using last-write-wins on `updatedAt`. Soft-delete tombstones (`deletedAt`) propagate deletions across devices without data loss. Sync is triggered on startup, debounced 3 seconds after every write, and runs on a 15-minute background alarm. The extension icon badge turns red if sync fails, and a status line appears in the sidebar. Bookmarks now survive browser restarts, extension reloads, and temporary server outages.
+
+---
+
 ## Pushed back on a planned design
 
 ### JWT replaced with server-side sessions (PR #47)

@@ -94,7 +94,8 @@ export function BookmarksView({ bookmarks, onAdd, onUpdate, onDelete, onEdit, op
             faviconUrl: tab.favIconUrl,
             faviconCache: null,
             userModifiedTags: false,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         });
     }
 

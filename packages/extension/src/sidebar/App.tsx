@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { RootData, Settings, Bookmark } from '@bookmark-manager/shared';
 import { createStorageProvider } from "../storage";
 import { StorageProvider } from "../storage/types";
+import { STORAGE_KEY } from "../storage/browser";
+import { SyncService, clearSyncState, SYNC_ERROR_KEY } from "../storage/sync";
 import { getApiKey, saveApiKey, getServerToken, saveServerToken, clearServerToken } from "../storage/credentials";
 import { createProvider } from "../providers";
 import { SettingsView } from "./SettingsView";
@@ -20,11 +22,13 @@ export function App() {
     const [apiKey, setApiKey] = useState<string>('');
     const [serverToken, setServerToken] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
+    const [syncError, setSyncError] = useState<string | null>(null);
     const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
     const [settings, setSettings] = useState<Settings | null>(null);
     const rootDataRef = useRef<RootData | null>(null);
     const settingsRef = useRef<Settings | null>(null);
     const storageProviderRef = useRef<StorageProvider | null>(null);
+    const syncServiceRef = useRef<SyncService | null>(null);
 
     useEffect(() => {
         async function bootstrap() {
@@ -34,9 +38,23 @@ export function App() {
                 storageProviderRef.current = provider;
                 const data = await provider.readData();
                 setSettings(loadedSettings);
-                setRootData(data);
                 setApiKey(key);
                 setServerToken(token);
+
+                if (loadedSettings.storageBackend === 'server' && loadedSettings.serverUrl && token) {
+                    const svc = new SyncService(loadedSettings.serverUrl);
+                    syncServiceRef.current = svc;
+                    try {
+                        await svc.sync();
+                        const synced = await provider.readData();
+                        setRootData(synced);
+                    } catch {
+                        // Initial sync failed — show local data, badge already reflects error
+                        setRootData(data);
+                    }
+                } else {
+                    setRootData(data);
+                }
             } catch (err) {
                 setError('Failed to load data: ' + (err instanceof Error ? err.message : String(err)));
             }
@@ -52,6 +70,27 @@ export function App() {
         settingsRef.current = settings;
     }, [settings]);
 
+    // Reflect background syncs (periodic alarm) into sidebar state
+    useEffect(() => {
+        if (settings?.storageBackend !== 'server') return;
+
+        function handleStorageChange(
+            changes: { [key: string]: chrome.storage.StorageChange },
+            areaName: string
+        ) {
+            if (areaName !== 'local') return;
+            if (STORAGE_KEY in changes && changes[STORAGE_KEY].newValue) {
+                setRootData(changes[STORAGE_KEY].newValue as RootData);
+            }
+            if (SYNC_ERROR_KEY in changes) {
+                const newError = changes[SYNC_ERROR_KEY].newValue ?? null;
+                setSyncError(newError as string | null);
+            }
+        }
+
+        chrome.storage.onChanged.addListener(handleStorageChange);
+        return () => chrome.storage.onChanged.removeListener(handleStorageChange);
+    }, [settings?.storageBackend]);
 
     useEffect(() => {
         async function handleTabUpdate(_tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
@@ -78,6 +117,10 @@ export function App() {
         const base = rootData ?? { version: '1.0' as const, bookmarks: [] };
         let mergedBookmarks = base.bookmarks;
 
+        // Cancel any pending sync before switching providers
+        syncServiceRef.current?.cancelPending();
+        syncServiceRef.current = null;
+
         const provider = createStorageProvider(newSettings);
         storageProviderRef.current = provider;
 
@@ -94,6 +137,10 @@ export function App() {
             }
         }
 
+        if (newSettings.storageBackend !== 'server') {
+            await clearSyncState();
+        }
+
         const dataToWrite: RootData = {
             version: base.version,
             bookmarks: mergedBookmarks,
@@ -106,6 +153,7 @@ export function App() {
             setRootData(dataToWrite);
             setSettings(newSettings);
             setApiKey(newApiKey);
+            setSyncError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save settings');
         }
@@ -118,15 +166,16 @@ export function App() {
             const newSettings: Settings = { ...settingsRef.current!, storageBackend: 'server' };
             const provider = createStorageProvider(newSettings);
             storageProviderRef.current = provider;
-            const serverData = await provider.readData();
-            const local = rootDataRef.current!.bookmarks;
-            const serverUrls = new Set(serverData.bookmarks.map(b => b.url));
-            const localOnly = local.filter(b => !serverUrls.has(b.url));
-            const merged: RootData = { version: '1.0', bookmarks: [...serverData.bookmarks, ...localOnly] };
-            await provider.writeData(merged);
+
+            const svc = new SyncService(newSettings.serverUrl!);
+            syncServiceRef.current = svc;
+
+            await svc.sync();
+            const synced = await provider.readData();
             await saveSettings(newSettings);
             setSettings(newSettings);
-            setRootData(merged);
+            setRootData(synced);
+            setSyncError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to connect to server');
         }
@@ -134,8 +183,12 @@ export function App() {
 
     async function handleLogout() {
         try {
+            syncServiceRef.current?.cancelPending();
+            syncServiceRef.current = null;
+            await clearSyncState();
             await clearServerToken();
             setServerToken('');
+            setSyncError(null);
             handleSaveSettings({ ...settings!, storageBackend: 'browser' }, apiKey);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to logout');
@@ -150,6 +203,7 @@ export function App() {
         try {
             await storageProviderRef.current!.writeData(updated);
             setRootData(updated);
+            syncServiceRef.current?.scheduleSync();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save bookmark');
         }
@@ -158,10 +212,12 @@ export function App() {
             try {
                 const suggestedTags = await fetchSuggestedTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
                 if (suggestedTags.length > 0) {
+                    const now = new Date().toISOString();
                     const withTags: Bookmark = {
                         ...bookmark,
                         aiSuggestedTags: suggestedTags,
-                        tags: bookmark.userModifiedTags ? bookmark.tags : suggestedTags
+                        tags: bookmark.userModifiedTags ? bookmark.tags : suggestedTags,
+                        updatedAt: now,
                     };
                     const current = rootDataRef.current!;
                     const withAiTags: RootData = {
@@ -170,6 +226,7 @@ export function App() {
                     };
                     await storageProviderRef.current!.writeData(withAiTags);
                     setRootData(withAiTags);
+                    syncServiceRef.current?.scheduleSync();
                 }
             } catch {
                 // Silently fail on AI errors
@@ -178,22 +235,34 @@ export function App() {
     }
 
     async function handleUpdateBookmark(updated: Bookmark) {
-        const bookmarks = rootData!.bookmarks.map((b) => b.id === updated.id ? updated : b);
+        const withTimestamp = { ...updated, updatedAt: new Date().toISOString() };
+        const bookmarks = rootData!.bookmarks.map((b) => b.id === withTimestamp.id ? withTimestamp : b);
         const updatedData = { ...rootData!, bookmarks };
         try {
             await storageProviderRef.current!.writeData(updatedData);
             setRootData(updatedData);
+            syncServiceRef.current?.scheduleSync();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to update bookmark');
         }
     }
 
     async function handleDeleteBookmark(id: string) {
-        const bookmarks = rootData!.bookmarks.filter((b) => b.id !== id);
-        const updatedData = { ...rootData!, bookmarks };
+        let updatedData: RootData;
+        if (settingsRef.current?.storageBackend === 'server') {
+            const now = new Date().toISOString();
+            const bookmarks = rootData!.bookmarks.map((b) =>
+                b.id === id ? { ...b, deletedAt: now, updatedAt: now } : b
+            );
+            updatedData = { ...rootData!, bookmarks };
+        } else {
+            const bookmarks = rootData!.bookmarks.filter((b) => b.id !== id);
+            updatedData = { ...rootData!, bookmarks };
+        }
         try {
             await storageProviderRef.current!.writeData(updatedData);
             setRootData(updatedData);
+            syncServiceRef.current?.scheduleSync();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete bookmark');
         }
@@ -236,6 +305,7 @@ export function App() {
             };
             await storageProviderRef.current!.writeData(updatedData);
             setRootData(updatedData);
+            syncServiceRef.current?.scheduleSync();
         }
         return { imported: newBookmarks.length, skipped };
     }
@@ -248,14 +318,19 @@ export function App() {
         return <div>{t('app.loading')}</div>;
     }
 
+    const visibleBookmarks = rootData.bookmarks.filter(b => !b.deletedAt);
+
     return (
         <div className="app">
             <nav>
                 <button className={view === 'bookmarks' ? 'active' : ''} onClick={() => setView('bookmarks')}>{t('nav.bookmarks')}</button>
                 <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>{t('nav.settings')}</button>
             </nav>
+            {syncError && (
+                <div className="sync-error-bar">{t('sync.error')}</div>
+            )}
             <main>
-                {view === 'bookmarks' && <BookmarksView bookmarks={rootData.bookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={settings!.openInNewTab ?? true} />}
+                {view === 'bookmarks' && <BookmarksView bookmarks={visibleBookmarks} onAdd={handleAddBookmark} onUpdate={handleUpdateBookmark} onDelete={handleDeleteBookmark} onEdit={setEditingBookmark} openInNewTab={settings!.openInNewTab ?? true} />}
                 {view === 'settings' && <SettingsView settings={settings!} apiKey={apiKey} onSave={handleSaveSettings} onImport={handleImport} serverToken={serverToken} onLogin={handleLogin} onLogout={handleLogout} />}
             </main>
             {editingBookmark && (

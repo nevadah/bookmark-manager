@@ -2,7 +2,6 @@ import { StorageProvider } from "./types";
 import { Settings } from "@bookmark-manager/shared";
 import { FileSystemStorageProvider } from "./file-system";
 import { BrowserStorageProvider } from "./browser";
-import { RemoteStorageProvider } from "./remote";
 
 export function createStorageProvider(settings: Settings): StorageProvider {
     switch (settings.storageBackend) {
@@ -11,10 +10,9 @@ export function createStorageProvider(settings: Settings): StorageProvider {
         case 'browser':
             return new BrowserStorageProvider();
         case 'server':
-            if (!settings.serverUrl) {
-                throw new Error('Server URL is required for server storage backend');
-            }
-            return new RemoteStorageProvider(settings.serverUrl);
+            // Server backend uses local browser storage as the working copy.
+            // SyncService handles syncing with the remote server.
+            return new BrowserStorageProvider();
         default: {
             const _exhaustive: never = settings.storageBackend;
             throw new Error(`Unknown storage backend: ${String(_exhaustive)}`);

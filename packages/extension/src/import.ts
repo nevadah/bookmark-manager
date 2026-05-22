@@ -19,7 +19,8 @@ function walk(
                 userModifiedTags: false,
                 createdAt: node.dateAdded
                     ? new Date(node.dateAdded).toISOString()
-                    : new Date().toISOString()
+                    : new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
             });
         } else if (node.children) {
             walk(node.children, [...pathSegments, node.title.toLowerCase()], result);
