@@ -24,6 +24,8 @@ export interface Bookmark {
     faviconCache: null;
     userModifiedTags: boolean;
     createdAt: string;
+    updatedAt: string;
+    deletedAt?: string | null;
 }
 
 export interface RootData {
