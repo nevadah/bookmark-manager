@@ -58,6 +58,14 @@ The fix replaced the architecture entirely. The server is no longer the primary 
 
 ---
 
+### Missing `alarms` permission crashed background service worker (PR #67)
+
+Adding the 15-minute periodic sync alarm in PR #65 required the `"alarms"` permission, which was not declared in either manifest. Without it, `chrome.alarms` is `undefined` at runtime. Accessing `chrome.alarms.onAlarm` on startup threw `TypeError: Cannot read properties of undefined (reading 'onAlarm')`, which caused the background service worker registration to fail entirely (status code 15).
+
+Found immediately after reloading the extension following the sync work. Fixed by adding `"alarms"` to the `permissions` array in both `manifest.json` and `manifest.firefox.json`.
+
+---
+
 ### Duplicate bookmarks allowed (PR #66)
 
 The "Save Current Page" button had no duplicate check — clicking it on a page already in the bookmark list added a second copy of the same URL. The import path had a duplicate check, but the direct save path did not.
