@@ -9,7 +9,8 @@
     "tabs",
     "activeTab",
     "sidePanel",
-    "bookmarks"
+    "bookmarks",
+    "alarms"
   ],
 
   "host_permissions": [
