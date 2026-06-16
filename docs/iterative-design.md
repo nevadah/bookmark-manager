@@ -52,6 +52,16 @@ After running an import and seeing a list of blank icons, the solution became ob
 
 ---
 
+### Bookmark and tag hover behavior changed to full-row highlight (PR #68)
+
+The original hover behavior on bookmark links was a text underline — the standard browser convention for inline body text links. Tag tree labels highlighted by changing the text color to the accent color.
+
+Both of these are text-only signals. After using the extension, it became clear that the interaction model is closer to a file explorer or sidebar nav than to body text — the whole row is the target, not just the text. Modern sidebar UIs (VS Code, Arc, Chrome's own bookmark manager) use full-row background highlights instead of text decoration.
+
+The fix removes the underline on bookmark hover and adds a full-width background tint (`--btn-hover`) to the entire `.bookmark-leaf` row using a negative margin / matching padding technique so the highlight extends edge-to-edge. A 0.1s ease transition removes the snap. Tag tree labels get the same row highlight while keeping the accent color change on the text, which visually distinguishes "expands a group" from "opens a URL."
+
+---
+
 ### Bookmarks sorted alphabetically within tag groups (PR #61)
 
 Bookmark ordering within tag tree nodes was determined by insertion order — the order bookmarks were added to the array, which varies by storage backend. File and browser storage preserve insertion order; the server returns bookmarks by creation timestamp. Importing from the browser produced one order; loading the same bookmarks back from the server produced a different one.
