@@ -18,7 +18,7 @@ export function EditPanel({ bookmark, onUpdate, onClose, allTags, onSuggestTags 
     const [suggesting, setSuggesting] = useState(false);
 
     const suggestions = allTags.filter(
-        (t) => !bookmark.tags.includes(t) && (tagInput === '' || t.toLowerCase().includes(tagInput.toLowerCase()))
+        (tag) => !bookmark.tags.includes(tag) && (tagInput === '' || tag.toLowerCase().includes(tagInput.toLowerCase()))
     );
 
     useEffect(() => {
