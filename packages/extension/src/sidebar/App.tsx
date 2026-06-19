@@ -343,6 +343,7 @@ export function App() {
                         setEditingBookmark(updated);
                     }}
                     onClose={() => setEditingBookmark(null)}
+                    allTags={[...new Set(visibleBookmarks.flatMap((b) => b.tags))].sort()}
                     onSuggestTags={apiKey || settings?.storageBackend === 'server' ? fetchSuggestedTags : undefined}
                 />
             )}

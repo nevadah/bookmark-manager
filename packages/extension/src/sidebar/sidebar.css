@@ -340,6 +340,33 @@ button.edit:hover {
     font-size: 12px;
 }
 
+.tag-suggestions {
+    align-content: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    max-height: 120px;
+    min-height: 120px;
+    overflow-y: auto;
+}
+
+.tag-suggestion {
+    background: none;
+    border: 1px solid var(--border-input);
+    color: var(--text-muted);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.tag-suggestion:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: none;
+}
+
 .tag button {
     background: none;
     border: none;
