@@ -6,15 +6,20 @@ interface EditPanelProps {
     bookmark: Bookmark;
     onUpdate: (bookmark: Bookmark) => void;
     onClose: () => void;
+    allTags: string[];
     onSuggestTags?: (url:string, title: string, description: string, tags: string[]) => Promise<string[]>;
 }
 
-export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPanelProps) {
+export function EditPanel({ bookmark, onUpdate, onClose, allTags, onSuggestTags }: EditPanelProps) {
     const { t } = useTranslation();
     const [title, setTitle] = useState(bookmark.title);
     const [url, setUrl] = useState(bookmark.url);
     const [tagInput, setTagInput] = useState('');
     const [suggesting, setSuggesting] = useState(false);
+
+    const suggestions = allTags.filter(
+        (t) => !bookmark.tags.includes(t) && (tagInput === '' || t.toLowerCase().includes(tagInput.toLowerCase()))
+    );
 
     useEffect(() => {
         setTitle(bookmark.title);
@@ -61,6 +66,10 @@ export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPa
         } finally {
             setSuggesting(false);
         }
+    }
+
+    function handleAddSuggestedTag(tag: string) {
+        onUpdate({ ...bookmark, tags: [...bookmark.tags, tag], userModifiedTags: true });
     }
 
     return (
@@ -111,6 +120,20 @@ export function EditPanel({ bookmark, onUpdate, onClose, onSuggestTags }: EditPa
                         onKeyDown={handleTagKeyDown}
                     />
                 </div>
+                {suggestions.length > 0 && (
+                    <div className="tag-suggestions">
+                        {suggestions.map((tag) => (
+                            <button
+                                key={tag}
+                                type="button"
+                                className="tag-suggestion"
+                                onClick={() => handleAddSuggestedTag(tag)}
+                            >
+                                + {tag}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 {onSuggestTags && (
                     <button type="button" onClick={handleSuggestTags} disabled={suggesting}>
                         {suggesting ? t('editPanel.suggesting') : t('editPanel.suggestTags')}
