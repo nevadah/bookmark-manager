@@ -52,6 +52,16 @@ After running an import and seeing a list of blank icons, the solution became ob
 
 ---
 
+### Existing tag suggestions added to edit panel (PR #70)
+
+The original tag input required typing a tag name exactly to reuse an existing tag. In practice this created friction: with a growing tag set, it was easy to mis-spell a tag or use a slight variation, gradually fragmenting the taxonomy.
+
+After using the extension with a reasonable number of bookmarks, it became clear that discoverability of existing tags was the missing piece. The fix adds a scrollable row of outlined chips below the tag input showing all tags already in use that aren't yet applied to the bookmark being edited. The chips filter as you type, so the input doubles as a search filter on existing tags. Clicking a chip adds the tag immediately.
+
+The chip area has a fixed height with scroll so a large tag set doesn't push the edit panel header off screen.
+
+---
+
 ### Bookmark and tag hover behavior changed to full-row highlight (PR #68)
 
 The original hover behavior on bookmark links was a text underline — the standard browser convention for inline body text links. Tag tree labels highlighted by changing the text color to the accent color.
