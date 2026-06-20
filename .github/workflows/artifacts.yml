@@ -23,7 +23,7 @@ jobs:
         run: cd packages/extension/dist && zip -r ../chrome-extension.zip .
 
       - name: Upload Chrome artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: chrome-extension
           path: packages/extension/chrome-extension.zip
@@ -34,7 +34,7 @@ jobs:
         run: cd packages/extension/dist-firefox && zip -r ../firefox-extension.xpi .
 
       - name: Upload Firefox artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: firefox-extension
           path: packages/extension/firefox-extension.xpi
