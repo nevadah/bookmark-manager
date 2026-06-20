@@ -15,9 +15,13 @@ describe('importBrowserBookmarks', () => {
         id: '1',
         title: 'Folder',
         children: [
-          { id: '2', title: 'Example', url: 'https://example.com' },
+          {
+            id: '2', title: 'Example', url: 'https://example.com', syncing: false
+          },
         ],
+        syncing: false
       }],
+      syncing: false
     }];
     const result = importBrowserBookmarks(tree);
     expect(result).toHaveLength(1);
@@ -29,7 +33,8 @@ describe('importBrowserBookmarks', () => {
     const tree: chrome.bookmarks.BookmarkTreeNode[] = [{
       id: '0',
       title: 'root',
-      children: [{ id: '1', title: 'Folder', children: [] }],
+      children: [{ id: '1', title: 'Folder', children: [], syncing: false }],
+      syncing: false
     }];
     const result = importBrowserBookmarks(tree);
     expect(result).toHaveLength(0);
@@ -46,10 +51,13 @@ describe('importBrowserBookmarks', () => {
           id: '2',
           title: 'Inner',
           children: [
-            { id: '3', title: 'Deep', url: 'https://deep.example.com' },
+            { id: '3', title: 'Deep', url: 'https://deep.example.com', syncing: false },
           ],
+          syncing: false
         }],
+        syncing: false
       }],
+      syncing: false
     }];
     const result = importBrowserBookmarks(tree);
     expect(result).toHaveLength(1);

@@ -28,7 +28,7 @@ export async function performSync(serverUrl: string): Promise<void> {
         getServerToken(),
         chrome.storage.local.get(LAST_SYNC_AT_KEY),
     ]);
-    const lastSyncAt: string | null = stored[LAST_SYNC_AT_KEY] ?? null;
+    const lastSyncAt: string | null = (stored[LAST_SYNC_AT_KEY] as string | undefined) ?? null;
 
     const response = await fetch(`${serverUrl.replace(/\/+$/, '')}/sync`, {
         method: 'POST',

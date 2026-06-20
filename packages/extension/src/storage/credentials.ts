@@ -3,7 +3,7 @@ const SERVER_TOKEN_STORAGE_KEY = 'serverToken';
 
 export async function getApiKey(): Promise<string> {
     const result = await chrome.storage.local.get(API_KEY_STORAGE_KEY);
-    return result[API_KEY_STORAGE_KEY] ?? '';
+    return (result[API_KEY_STORAGE_KEY] as string | undefined) ?? '';
 }
 
 export async function saveApiKey(apiKey: string): Promise<void> {
@@ -12,7 +12,7 @@ export async function saveApiKey(apiKey: string): Promise<void> {
 
 export async function getServerToken(): Promise<string> {
     const result = await chrome.storage.local.get(SERVER_TOKEN_STORAGE_KEY);
-    return result[SERVER_TOKEN_STORAGE_KEY] ?? '';
+    return (result[SERVER_TOKEN_STORAGE_KEY] as string | undefined) ?? '';
 }
 
 export async function saveServerToken(serverToken: string): Promise<void> {

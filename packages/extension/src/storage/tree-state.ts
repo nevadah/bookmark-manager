@@ -4,7 +4,7 @@ const TREE_STATE_KEY = 'tagTreeState';
 
 export async function getTreeState(): Promise<Record<string, boolean>> {
     const result = await chrome.storage.local.get(TREE_STATE_KEY);
-    return result[TREE_STATE_KEY] ?? {};
+    return (result[TREE_STATE_KEY] as Record<string, boolean> | undefined) ?? {};
 }
 
 export async function saveTreeState(state: Record<string, boolean>): Promise<void> {
