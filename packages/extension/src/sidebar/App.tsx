@@ -93,7 +93,7 @@ export function App() {
     }, [settings?.storageBackend]);
 
     useEffect(() => {
-        async function handleTabUpdate(_tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) {
+        async function handleTabUpdate(_tabId: number, changeInfo: chrome.tabs.OnUpdatedInfo, tab: chrome.tabs.Tab) {
             if (!changeInfo.favIconUrl || !tab.url) return;
             const current = rootDataRef.current;
             if (!current) return;
