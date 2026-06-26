@@ -9,6 +9,8 @@ import { authRoutes } from './routes/auth.js';
 import { bookmarkRoutes } from './routes/bookmarks.js';
 import { aiRoutes } from './routes/ai.js';
 import { syncRoutes } from './routes/sync.js';
+import { adminRoutes } from './routes/admin.js';
+import { orgRoutes } from './routes/orgs.js';
 import cors from '@fastify/cors';
 
 export async function buildApp() {
@@ -57,6 +59,8 @@ export async function buildApp() {
   await app.register(bookmarkRoutes);
   await app.register(aiRoutes);
   await app.register(syncRoutes);
+  await app.register(adminRoutes);
+  await app.register(orgRoutes);
 
   return app;
 }
