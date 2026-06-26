@@ -6,7 +6,9 @@ An AI-powered browser bookmark manager built as a WebExtension (Manifest V3). Ta
 
 The purpose and goals of this project are:
 - To practice coding with TypeScript and React and, as a secondary goal, to learn browser extension development.
-- To use AI differently than other projects I've done. Claude guides the process and suggests tasks, I write the code, and Claude reviews my work.
+- To use AI differently than other projects I've done.
+  - Claude guides the process and suggests tasks, I write the code, and Claude reviews my work.
+  - Claude also acts as a collaborator, standing in for teammates and other stakeholders. It provides advice and suggestions on design, architecture and implementation, and I then make decisions on these matters.
 - To demonstrate iterative design in practice. Initial design decisions are made with incomplete information — you can't fully evaluate a design until you're actually using it. This project tracks those decisions and the changes that follow from real use. See [docs/iterative-design.md](docs/iterative-design.md).
 
 This is a learning project. It is not initially intended as something that will be put into production but it's possible it will get to that point.
