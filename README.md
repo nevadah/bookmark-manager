@@ -27,9 +27,9 @@ This is a learning project. It is not initially intended as something that will 
 | Layer | Technology |
 |---|---|
 | Language | TypeScript |
-| Extension UI | React 18, Vite 6 |
+| Extension UI | React 18, Vite 8 |
 | Extension API | WebExtensions API, Manifest V3 |
-| Server | Fastify 5, Prisma 6, Node.js 22 |
+| Server | Fastify 5, Prisma 7, Node.js 22 |
 | Database | PostgreSQL 18 |
 | Testing | Vitest |
 | Monorepo | npm workspaces |
@@ -61,6 +61,7 @@ packages/
     prisma/
       schema.prisma database schema
       migrations/   applied migration history
+    prisma.config.ts  database connection and migration config
 ```
 
 ---
