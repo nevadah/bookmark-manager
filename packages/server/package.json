@@ -6,6 +6,7 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "tsx watch --env-file=.env src/index.ts",
+    "create-admin": "tsx --env-file=.env src/scripts/create-admin.ts",
     "build": "tsc",
     "lint": "eslint src",
     "check": "npm run lint && npm run typecheck && npm run build && npm run test",
