@@ -52,6 +52,16 @@ After running an import and seeing a list of blank icons, the solution became ob
 
 ---
 
+### Edit panel changed from overlay to displacement (PR #86)
+
+The original edit panel used `position: fixed` to anchor itself to the bottom of the sidebar, overlaying the bookmark list. With a long enough list, this meant the last several items were permanently hidden behind the panel for the duration of editing — the only way to reach them was to close the panel first.
+
+The interaction model of a fixed-height sidebar is closer to an email client or file explorer than a scrollable web page, and in those contexts the standard pattern is displacement: the detail/edit pane shrinks the list pane rather than covering it. The edit panel was changed to flow as a normal flex child of the sidebar, which causes the list to give up space to accommodate it. All bookmarks remain reachable by scrolling while the panel is open.
+
+The change was a single CSS edit: removing `position: fixed; bottom: 0; left: 0; right: 0` from `.edit-panel` and adding `flex-shrink: 0`. The DOM structure already had the edit panel as a sibling of `<main>` rather than a child, so no JSX changes were needed.
+
+---
+
 ### Existing tag suggestions added to edit panel (PR #70)
 
 The original tag input required typing a tag name exactly to reuse an existing tag. In practice this created friction: with a growing tag set, it was easy to mis-spell a tag or use a slight variation, gradually fragmenting the taxonomy.
