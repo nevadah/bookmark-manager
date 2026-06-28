@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { buildApp } from '../app.js';
 import type { FastifyInstance } from 'fastify';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 let app: FastifyInstance;
 let token: string;
@@ -166,3 +171,35 @@ describe('POST /sync', () => {
     expect(tombstone.deletedAt).toBe(t2);
   });
 });
+
+describe('POST /sync - org bookmarks', () => {
+    let orgId: string;
+
+    beforeEach(async () => {
+        const org = await prisma.organization.create({ data: { name: 'Test Org' } });
+        orgId = org.id;
+        await prisma.bookmark.create({
+            data: { url: 'https://org.example.com', title: 'Org BM', orgId },
+        });
+    });
+
+    it('includes org bookmarks with readOnly: true for a member', async () => {
+        const user = await prisma.user.findUnique({ where: { email: 'sync@example.com' } });
+        await prisma.orgMembership.create({ data: { orgId, userId: user!.id, role: 'MEMBER' } });
+
+        const res = await sync({ bookmarks: [], lastSyncAt: null });
+        const body = JSON.parse(res.body);
+        const orgBm = body.bookmarks.find((b: { url: string }) => b.url === 'https://org.example.com');
+        expect(orgBm).toBeDefined();
+        expect(orgBm.readOnly).toBe(true);
+    });
+
+    it('does not include org bookmarks for a non-member', async () => {
+        // sync@example.com has no membership — org bookmark should be absent
+        const res = await sync({ bookmarks: [], lastSyncAt: null });
+        const body = JSON.parse(res.body);
+        const orgBm = body.bookmarks.find((b: { url: string }) => b.url === 'https://org.example.com');
+        expect(orgBm).toBeUndefined();
+    });
+});
+
