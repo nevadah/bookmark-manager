@@ -114,6 +114,17 @@ export async function syncRoutes(app: FastifyInstance) {
       }
     }
 
+    const memberships = await app.prisma.orgMembership.findMany({
+        where: { userId },
+        select: { orgId: true },
+    });
+    const orgIds = memberships.map(m => m.orgId);
+    const orgBookmarks = orgIds.length > 0
+        ? await app.prisma.bookmark.findMany({
+            where: { orgId: { in: orgIds }, deletedAt: null },
+          })
+        : [];
+
     // Return merged state: live bookmarks + recent tombstones (for deletion propagation)
     const result = await app.prisma.bookmark.findMany({
       where: {
@@ -125,6 +136,10 @@ export async function syncRoutes(app: FastifyInstance) {
       },
     });
 
-    return reply.send({ bookmarks: result, syncedAt: syncedAt.toISOString() });
+    return reply.send({
+        bookmarks: [...result, ...orgBookmarks.map(b => ({ ...b, readOnly: true }))],
+        syncedAt: syncedAt.toISOString(),
+    });
+
   });
 }

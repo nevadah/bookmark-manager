@@ -11,6 +11,7 @@ import { aiRoutes } from './routes/ai.js';
 import { syncRoutes } from './routes/sync.js';
 import { adminRoutes } from './routes/admin.js';
 import { orgRoutes } from './routes/orgs.js';
+import { orgBookmarkRoutes } from './routes/org-bookmarks.js';
 import cors from '@fastify/cors';
 
 export async function buildApp() {
@@ -61,6 +62,7 @@ export async function buildApp() {
   await app.register(syncRoutes);
   await app.register(adminRoutes);
   await app.register(orgRoutes);
-
+  await app.register(orgBookmarkRoutes);
+  
   return app;
 }
