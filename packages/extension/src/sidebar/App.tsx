@@ -266,6 +266,7 @@ export function App() {
         try {
             await storageProviderRef.current!.writeData(updatedData);
             setRootData(updatedData);
+            setEditingBookmark(previous => previous?.id === id ? null : previous);
             syncServiceRef.current?.scheduleSync();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete bookmark');
