@@ -61,7 +61,7 @@ export async function performSync(serverUrl: string): Promise<void> {
         syncedAt: string;
     };
 
-    // Preserve extension-only fields (aiSuggestedTags, userModifiedTags) from local copies
+    // Preserve extension-only fields (faviconUrl, aiSuggestedTags, userModifiedTags) from local copies
     const localMap = new Map(localData.bookmarks.map(b => [b.id, b]));
 
     const merged: Bookmark[] = serverBookmarks.map(sb => {
@@ -72,7 +72,7 @@ export async function performSync(serverUrl: string): Promise<void> {
             title: sb.title,
             description: sb.description,
             tags: sb.tags,
-            faviconUrl: sb.faviconUrl,
+            faviconUrl: local?.faviconUrl ?? sb.faviconUrl,
             faviconCache: null,
             createdAt: sb.createdAt,
             updatedAt: sb.updatedAt,

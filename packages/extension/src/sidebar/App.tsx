@@ -215,13 +215,15 @@ export function App() {
                 const suggestedTags = await fetchSuggestedTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
                 if (suggestedTags.length > 0) {
                     const now = new Date().toISOString();
+                    const current = rootDataRef.current!;
+                    const latestBookmark = current.bookmarks.find((b) => b.id === bookmark.id && !b.deletedAt);
+                    if (!latestBookmark) return; // bookmark was deleted in the meantime
                     const withTags: Bookmark = {
-                        ...bookmark,
+                        ...latestBookmark,
                         aiSuggestedTags: suggestedTags,
-                        tags: bookmark.userModifiedTags ? bookmark.tags : suggestedTags,
+                        tags: latestBookmark.userModifiedTags ? latestBookmark.tags : suggestedTags,
                         updatedAt: now,
                     };
-                    const current = rootDataRef.current!;
                     const withAiTags: RootData = {
                         ...current,
                         bookmarks: current.bookmarks.map((b) => b.id === withTags.id ? withTags : b)
