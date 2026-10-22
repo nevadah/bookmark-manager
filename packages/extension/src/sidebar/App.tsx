@@ -12,6 +12,7 @@ import { BookmarksView } from "./BookmarksView";
 import { EditPanel } from "./EditPanel";
 import { importBrowserBookmarks } from "../import";
 import { getSettings, saveSettings } from "../storage/settings";
+import { fetchFavicon } from "../favicon";
 
 type View = 'bookmarks' | 'settings';
 
@@ -94,14 +95,20 @@ export function App() {
 
     useEffect(() => {
         async function handleTabUpdate(_tabId: number, changeInfo: chrome.tabs.OnUpdatedInfo, tab: chrome.tabs.Tab) {
-            if (!changeInfo.favIconUrl || !tab.url) return;
+            const favIconUrl = changeInfo.favIconUrl;
+            if (!favIconUrl || !tab.url) return;
             const current = rootDataRef.current;
             if (!current) return;
-            const bookmark = current.bookmarks.find((b) => b.url === tab.url && !b.faviconUrl);
+            const bookmark = current.bookmarks.find((b) => b.url === tab.url && !b.deletedAt && (b.faviconUrl !== favIconUrl || !b.faviconCache));
             if (!bookmark) return;
-            const updated = { ...bookmark, faviconUrl: changeInfo.favIconUrl };
-            const bookmarks = current.bookmarks.map((b) => b.id === updated.id ? updated : b);
-            const updatedData = { ...current, bookmarks };
+            const faviconCache = await fetchFavicon(favIconUrl);
+            const latestData = rootDataRef.current;
+            if (!latestData) return;
+            const latestBookmark = latestData.bookmarks.find((b) => b.id === bookmark.id && !b.deletedAt);
+            if (!latestBookmark) return; // bookmark was deleted in the meantime
+            const updated = { ...latestBookmark, faviconUrl: favIconUrl, faviconCache };
+            const bookmarks = latestData.bookmarks.map((b) => b.id === updated.id ? updated : b);
+            const updatedData = { ...latestData, bookmarks };
             try {
                 await storageProviderRef.current!.writeData(updatedData);
                 setRootData(updatedData);
@@ -210,31 +217,34 @@ export function App() {
             setError(err instanceof Error ? err.message : 'Failed to save bookmark');
         }
 
-        if (apiKey || settingsRef.current?.storageBackend === 'server') {
-            try {
-                const suggestedTags = await fetchSuggestedTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags);
-                if (suggestedTags.length > 0) {
-                    const now = new Date().toISOString();
-                    const current = rootDataRef.current!;
-                    const latestBookmark = current.bookmarks.find((b) => b.id === bookmark.id && !b.deletedAt);
-                    if (!latestBookmark) return; // bookmark was deleted in the meantime
-                    const withTags: Bookmark = {
-                        ...latestBookmark,
-                        aiSuggestedTags: suggestedTags,
-                        tags: latestBookmark.userModifiedTags ? latestBookmark.tags : suggestedTags,
-                        updatedAt: now,
-                    };
-                    const withAiTags: RootData = {
-                        ...current,
-                        bookmarks: current.bookmarks.map((b) => b.id === withTags.id ? withTags : b)
-                    };
-                    await storageProviderRef.current!.writeData(withAiTags);
-                    setRootData(withAiTags);
-                    syncServiceRef.current?.scheduleSync();
-                }
-            } catch {
-                // Silently fail on AI errors
+        const aiEnabled = Boolean(apiKey) || settingsRef.current?.storageBackend === 'server';
+        try {
+            const [faviconCache, suggestedTags] = await Promise.all([
+                bookmark.faviconUrl ? fetchFavicon(bookmark.faviconUrl) : Promise.resolve(null),
+                aiEnabled ? fetchSuggestedTags(bookmark.url, bookmark.title, bookmark.description, bookmark.tags).catch(() => []) : Promise.resolve([])
+            ]);
+            if (!faviconCache && !suggestedTags.length) return;
+            const current = rootDataRef.current!;
+            const latestBookmark = current.bookmarks.find((b) => b.id === bookmark.id && !b.deletedAt);
+            if (!latestBookmark) return; // bookmark was deleted in the meantime
+            const updatedBookmark = { ...latestBookmark };
+            if (faviconCache) {
+                updatedBookmark.faviconCache = faviconCache;
             }
+            if (suggestedTags.length > 0) {
+                updatedBookmark.aiSuggestedTags = suggestedTags;
+                updatedBookmark.tags = updatedBookmark.userModifiedTags ? updatedBookmark.tags : suggestedTags;
+                updatedBookmark.updatedAt = new Date().toISOString();
+            }
+            const withUpdates: RootData = {
+                ...current,
+                bookmarks: current.bookmarks.map((b) => b.id === updatedBookmark.id ? updatedBookmark : b)
+            };
+            await storageProviderRef.current!.writeData(withUpdates);
+            setRootData(withUpdates);
+            syncServiceRef.current?.scheduleSync();
+        } catch {
+            // Silently fail on save errors
         }
     }
 
