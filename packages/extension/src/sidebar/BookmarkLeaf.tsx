@@ -18,12 +18,14 @@ export function BookmarkLeaf({ bookmark, onUpdate: _onUpdate, onDelete, onEdit, 
         setContextMenu({ x: e.clientX, y: e.clientY });
     }
 
+    const faviconSrc = bookmark.faviconCache || bookmark.faviconUrl;
+
     return (
         <li className="bookmark-leaf" onContextMenu={handleContextMenu}>
             <div className="bookmark-header">
-                {bookmark.faviconUrl && (
+                {faviconSrc && (
                     <img
-                        src={bookmark.faviconUrl}
+                        src={faviconSrc}
                         className="favicon"
                         alt=""
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

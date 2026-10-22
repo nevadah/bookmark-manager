@@ -21,7 +21,7 @@ export interface Bookmark {
     tags: string[];
     aiSuggestedTags: string[];
     faviconUrl?: string;
-    faviconCache: null;
+    faviconCache: string | null;
     userModifiedTags: boolean;
     createdAt: string;
     updatedAt: string;
